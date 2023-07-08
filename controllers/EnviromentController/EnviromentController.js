@@ -1,6 +1,8 @@
 const db = require('../../lib/db')
 let channel = "SweetLeaf"
 
+
+
 module.exports = {
   get: (req, res) => {
     /* ...
@@ -31,7 +33,7 @@ module.exports = {
      // #swagger.tags = ['Environment']
      ...
      */
-
+     pubClient = req.app.locals.pubClient
     console.log(isNaN(parseInt(req.body.light_exposure)))
     let envObj = {
       user_id: req.user.user_id,
@@ -63,8 +65,8 @@ module.exports = {
         }
 
         let str_payload = JSON.stringify(payload)
-        req.pubClient.publish(channel, str_payload)
-
+        pubClient.publish(channel, str_payload)
+  
         res.send(result)
 
       }
@@ -115,7 +117,7 @@ module.exports = {
         }
     
         let str_payload = JSON.stringify(payload)
-        req.pubClient.publish(channel, str_payload)
+        pubClient.publish(channel, str_payload)
 
         res.send(result)
 
@@ -127,7 +129,7 @@ module.exports = {
       // #swagger.tags = ['Environment']
       ...
       */
-
+      pubClient = req.app.locals.pubClient
     let sql = `
       DELETE FROM environments WHERE environments.environment_id = ? AND environments.user_id = ?
       `
@@ -136,7 +138,16 @@ module.exports = {
         console.log(err)
 
       } else {
-
+        
+        let payload = {
+          type: "environment_deleted",
+          user: req.user,
+          data: result.affectedRows
+        }
+      
+        let str_payload = JSON.stringify(payload)
+        pubClient.publish(channel, str_payload)
+  
         res.send(result)
 
       }

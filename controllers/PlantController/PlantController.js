@@ -2,8 +2,6 @@ const db = require('../../lib/db')
 const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper')
 
 
-
-
   // Query 1
   function insert_plant(req,res,connection) {
 
@@ -20,7 +18,6 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
       environment_id,
       irrigation_type,
       public,
-      stage,
       user_id:req.user.user_id
     }
 
@@ -40,8 +37,8 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
     });
   }
 
-    // Query 2
-    function insert_plant_action(connection,req,res,prev_results) {
+  // Query 2
+  function insert_plant_action(connection,req,res,prev_results) {
 
       let sql = `INSERT INTO plant_actions (plant_id,user_id,plant_action_type_id) VALUES (${prev_results.insertId},${req.user.user_id},14)`
   
@@ -57,10 +54,10 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
         // Continue with other queries or commit the transaction
         insert_plant_strain_action(connection,req,res,prev_results,results.insertId);
       });
-    }
+  }
 
-        // Query 3
-        function insert_plant_strain_action(connection,req,res,prev_results,id) {
+  // Query 3
+  function insert_plant_strain_action(connection,req,res,prev_results,id) {
 
           console.log("prev_results",prev_results)
           console.log("req",req.body.stage)
@@ -78,19 +75,18 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
             // Continue with other queries or commit the transaction
             get_plant(connection,req,res,prev_results);
           });
-        }
+  }
 
   // Query 4
   function get_plant(connection,req,res,prev_results) {
 
     let sql = `
-    SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.environment_id,environments.name,plants.views,plants.likes,plants.stage,stages.stage_name
+    SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.environment_id,environments.name,plants.views,plants.likes
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
     JOIN strains ON strains.strain_id = plants.plant_strain
     JOIN environments ON environments.environment_id = plants.environment_id
-    JOIN stages ON stages.stage_id = plants.stage
     WHERE plants.user_id = ?
     AND plants.plant_id = ?
     `
@@ -174,13 +170,13 @@ module.exports = {
     ...
     */
     let sql = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.environment_id,environments.name,plants.views,plants.likes,plants.stage,stages.stage_name
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.environment_id,environments.name,plants.views,plants.likes
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
     JOIN strains ON strains.strain_id = plants.plant_strain
     JOIN environments ON environments.environment_id = plants.environment_id
-    JOIN stages ON stages.stage_id = plants.stage
+  
     WHERE plants.user_id = ?
     ORDER BY plants.creation_date DESC
     `
@@ -237,68 +233,27 @@ module.exports = {
         res.send(result)
       }
     })
+  },
+  current_stage: (req, res) => {
+    /* ...
+      // #swagger.tags = ['Plants']
+      ...
+      */
+      let sql = `
+      SELECT plant_stages.creation_date,plant_stages.last_updated,plant_stages.plant_action_type_id,plant_stages.plant_id,plant_stages.plant_stage,plant_stages.plant_stage_id,plant_stages.user_id,stages.stage_name,stages.stage_color
+      FROM plant_stages
+      JOIN stages ON stages.stage_id = plant_stages.plant_stage
+      WHERE plant_id = ?
+      AND user_id = ?
+      ORDER BY creation_date DESC
+      `
+    db.query(sql, [req.body.plant_id, req.user.user_id], (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.send(result[0])
+      }
+    })
   }
 }
 
-// add: (req, res) => {
-//   /* ...
-//       // #swagger.tags = ['Plants']
-//       ...
-//       */
-//   let plant_name = req.body.name
-//   let plant_strain = req.body.strain
-//   let environment_id = req.body.environment
-//   let irrigation_type = req.body.irrigation
-//   let public = req.body.public
-//   let stage = req.body.stage
-
-//   let values = {
-//     plant_name:`"${plant_name}"`,
-//     plant_strain,
-//     environment_id,
-//     irrigation_type,
-//     public,
-//     stage,
-//     user_id:req.user.user_id
-//   }
-
-//   let sql = `INSERT INTO plants (${Object.keys(values)}) VALUES (${Object.values(values)})`
-
-//     db.query(sql,(err, results, fields) => {
-//       if (err) {
-//         console.log(err)
-//       } else {
-      
-//       let sql = `INSERT INTO plant_actions (plant_id,user_id,plant_action_type_id) VALUES (${results.insertId},${req.user.user_id},14)`
-                
-//       db.query(sql,(err, result, fields) => {
-//         if (err) {
-//           console.log(err)
-//         } else {
-        
-//           let sql = `
-//           SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.environment_id,environments.name,plants.views,plants.likes,plants.stage,stages.stage_name
-//           FROM users
-//           JOIN plants ON users.user_id = plants.user_id
-//           JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
-//           JOIN strains ON strains.strain_id = plants.plant_strain
-//           JOIN environments ON environments.environment_id = plants.environment_id
-//           JOIN stages ON stages.stage_id = plants.stage
-//           WHERE plants.user_id = ?
-//           AND plants.plant_id = ?
-//           `
-
-//           db.query(sql,[req.user.user_id,results.insertId],(err, result, fields) => {
-//             if (err) {
-//               console.log(err)
-//             } else {
-            
-//               res.send(result)
-//             }
-//           })
-//         }
-//       })
-//       }
-//     })
-
-// },

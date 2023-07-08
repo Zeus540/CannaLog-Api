@@ -87,7 +87,9 @@ module.exports = {
       case 14:
 
         function insert_stage_action(req, res, connection, prev_result) {
-          sql = `INSERT INTO plant_stages (plant_action_type_id, user_id,plant_id,plant_stage, creation_date,last_updated) VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},${req.body.stage_id},'${utcTimestamp}','${utcTimestamp}')`
+          sql = `
+          INSERT INTO plant_stages (plant_action_type_id, user_id,plant_id,plant_stage, creation_date,last_updated) 
+          VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},${req.body.stage_id},'${utcTimestamp}','${utcTimestamp}')`
 
           db.query(sql, (err, result, fields) => {
             if (err) {

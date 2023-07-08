@@ -1,0 +1,304 @@
+const db = require('../../lib/db')
+const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper')
+
+
+
+
+  // Query 1
+  function insert_plant(req,res,connection) {
+
+    let plant_name = req.body.name
+    let plant_strain = req.body.strain
+    let environment_id = req.body.environment
+    let irrigation_type = req.body.irrigation
+    let public = req.body.public
+    let stage = req.body.stage
+
+    let values = {
+      plant_name:`"${plant_name}"`,
+      plant_strain,
+      environment_id,
+      irrigation_type,
+      public,
+      stage,
+      user_id:req.user.user_id
+    }
+
+    let sql = `INSERT INTO plants (${Object.keys(values)}) VALUES (${Object.values(values)})`
+
+    db.query(sql, (error, results) => {
+      if (error) {
+        console.error('Error executing query 1: ', error);
+        rollback(connection, res);
+        return;
+      }
+
+      console.log('Results of query 1: ', results);
+
+      // Continue with other queries or commit the transaction
+      insert_plant_action(connection,req,res,results);
+    });
+  }
+
+    // Query 2
+    function insert_plant_action(connection,req,res,prev_results) {
+
+      let sql = `INSERT INTO plant_actions (plant_id,user_id,plant_action_type_id) VALUES (${prev_results.insertId},${req.user.user_id},14)`
+  
+      db.query(sql, (error, results) => {
+        if (error) {
+          console.error('Error executing query 2: ', error);
+          rollback(connection, res);
+          return;
+        }
+  
+        console.log('Results of query 2: ', results);
+  
+        // Continue with other queries or commit the transaction
+        insert_plant_strain_action(connection,req,res,prev_results,results.insertId);
+      });
+    }
+
+        // Query 3
+        function insert_plant_strain_action(connection,req,res,prev_results,id) {
+
+          console.log("prev_results",prev_results)
+          console.log("req",req.body.stage)
+          let sql = `INSERT INTO plant_stages (plant_id,user_id,plant_action_type_id,plant_stage) VALUES (${prev_results.insertId},${req.user.user_id},${id},${req.body.stage})`
+      
+          db.query(sql, (error, results) => {
+            if (error) {
+              console.error('Error executing query 3: ', error);
+              rollback(connection, res);
+              return;
+            }
+      
+            console.log('Results of query 3: ', results);
+      
+            // Continue with other queries or commit the transaction
+            get_plant(connection,req,res,prev_results);
+          });
+        }
+
+  // Query 4
+  function get_plant(connection,req,res,prev_results) {
+
+    let sql = `
+    SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.environment_id,environments.name,plants.views,plants.likes,plants.stage,stages.stage_name
+    FROM users
+    JOIN plants ON users.user_id = plants.user_id
+    JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
+    JOIN strains ON strains.strain_id = plants.plant_strain
+    JOIN environments ON environments.environment_id = plants.environment_id
+    JOIN stages ON stages.stage_id = plants.stage
+    WHERE plants.user_id = ?
+    AND plants.plant_id = ?
+    `
+
+    db.query(sql,[req.user.user_id,prev_results.insertId], (error, results) => {
+      if (error) {
+        console.error('Error executing query 4: ', error);
+        rollback(connection, res);
+        return;
+      }
+      commit(connection,res, prev_results, results);
+      console.log('Results of query 4: ', results);
+
+
+    });
+  }
+ 
+
+module.exports = {
+  getPublic: (req, res) => {
+    /* ...
+    // #swagger.tags = ['Plants']
+    ...
+    */
+    let sql = `
+        SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.views,plants.likes
+        FROM users
+        JOIN plants ON users.user_id = plants.user_id
+        JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
+        JOIN strains ON strains.strain_id = plants.plant_strain
+        WHERE plants.public = 1
+        ORDER BY plants.creation_date DESC
+        `
+
+    db.query(sql, (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.send(result)
+      }
+    })
+  },
+  getStrains: (req, res) => {
+    /* ...
+    // #swagger.tags = ['Plants']
+    ...
+    */
+    let sql = `
+            SELECT * FROM strains
+            `
+
+    db.query(sql, (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.send(result)
+      }
+    })
+  },
+  getStages: (req, res) => {
+    /* ...
+    // #swagger.tags = ['Plants']
+    ...
+    */
+    let sql = `
+            SELECT * FROM stages
+            `
+
+    db.query(sql, (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.send(result)
+      }
+    })
+  },
+  
+  getMyPlants: (req, res) => {
+    /* ...
+    // #swagger.tags = ['Plants']
+    ...
+    */
+    let sql = `
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.environment_id,environments.name,plants.views,plants.likes,plants.stage,stages.stage_name
+    FROM users
+    JOIN plants ON users.user_id = plants.user_id
+    JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
+    JOIN strains ON strains.strain_id = plants.plant_strain
+    JOIN environments ON environments.environment_id = plants.environment_id
+    JOIN stages ON stages.stage_id = plants.stage
+    WHERE plants.user_id = ?
+    ORDER BY plants.creation_date DESC
+    `
+
+    db.query(sql, [req.user.user_id], (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.send(result)
+      }
+    })
+  },
+  add: (req, res) => {
+    /* ...
+        // #swagger.tags = ['Plants']
+        ...
+        */
+        // Acquire a connection from the pool
+        db.getConnection((error, connection) => {
+          if (error) {
+            console.error('Error acquiring connection from the pool: ', error);
+            res.status(500).json({ error: 'Internal server error' });
+            return;
+          }
+            // Start the transaction
+        connection.beginTransaction((error) => {
+        if (error) {
+          console.error('Error starting the transaction: ', error);
+          releaseConnectionAndRespond(connection, res, 500, 'Internal server error');
+          return;
+        }
+
+        // Perform queries within the transaction
+        insert_plant(req,res,connection);
+      
+      });
+
+  });
+     
+  },
+  delete: (req, res) => {
+    /* ...
+      // #swagger.tags = ['Plants']
+      ...
+      */
+
+      let sql = `
+      DELETE FROM plants WHERE plants.plant_id = ? AND plants.user_id = ?
+      `
+    db.query(sql, [req.params.plant_id, req.user.user_id], (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.send(result)
+      }
+    })
+  }
+}
+
+// add: (req, res) => {
+//   /* ...
+//       // #swagger.tags = ['Plants']
+//       ...
+//       */
+//   let plant_name = req.body.name
+//   let plant_strain = req.body.strain
+//   let environment_id = req.body.environment
+//   let irrigation_type = req.body.irrigation
+//   let public = req.body.public
+//   let stage = req.body.stage
+
+//   let values = {
+//     plant_name:`"${plant_name}"`,
+//     plant_strain,
+//     environment_id,
+//     irrigation_type,
+//     public,
+//     stage,
+//     user_id:req.user.user_id
+//   }
+
+//   let sql = `INSERT INTO plants (${Object.keys(values)}) VALUES (${Object.values(values)})`
+
+//     db.query(sql,(err, results, fields) => {
+//       if (err) {
+//         console.log(err)
+//       } else {
+      
+//       let sql = `INSERT INTO plant_actions (plant_id,user_id,plant_action_type_id) VALUES (${results.insertId},${req.user.user_id},14)`
+                
+//       db.query(sql,(err, result, fields) => {
+//         if (err) {
+//           console.log(err)
+//         } else {
+        
+//           let sql = `
+//           SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.environment_id,environments.name,plants.views,plants.likes,plants.stage,stages.stage_name
+//           FROM users
+//           JOIN plants ON users.user_id = plants.user_id
+//           JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
+//           JOIN strains ON strains.strain_id = plants.plant_strain
+//           JOIN environments ON environments.environment_id = plants.environment_id
+//           JOIN stages ON stages.stage_id = plants.stage
+//           WHERE plants.user_id = ?
+//           AND plants.plant_id = ?
+//           `
+
+//           db.query(sql,[req.user.user_id,results.insertId],(err, result, fields) => {
+//             if (err) {
+//               console.log(err)
+//             } else {
+            
+//               res.send(result)
+//             }
+//           })
+//         }
+//       })
+//       }
+//     })
+
+// },

@@ -1,0 +1,380 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Sweet Leaf API",
+    "contact": {
+      "name": "Creator",
+      "url": "https://zaheerroberts.co.za",
+      "email": "zaheerroberts4@gmail.com"
+    },
+    "description": "Set of API endpoints for recalling and manipulating the data relating to Sweet Leaf"
+  },
+  "host": "localhost:9954",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "User"
+    },
+    {
+      "name": "Journals"
+    },
+    {
+      "name": "Harvested Journals"
+    },
+    {
+      "name": "Strains"
+    },
+    {
+      "name": "Grow Techniques"
+    },
+    {
+      "name": "Nutrients"
+    },
+    {
+      "name": "Smell Profiles"
+    },
+    {
+      "name": "Journal Data"
+    },
+    {
+      "name": "Journal Weeks"
+    },
+    {
+      "name": "Journal Week Information"
+    },
+    {
+      "name": "Journal Days"
+    },
+    {
+      "name": "Journal Notes"
+    },
+    {
+      "name": "Germination Methods"
+    }
+  ],
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "securityDefinitions": {
+    "apiKeyAuth": {
+      "type": "apiKey",
+      "in": "cookie",
+      "name": "session user",
+      "description": "any description..."
+    }
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/login/": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/register/": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userName": {
+                  "example": "any"
+                },
+                "name": {
+                  "example": "any"
+                },
+                "email": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/plants/": {
+      "get": {
+        "tags": [
+          "Plants"
+        ],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/plants/public": {
+      "get": {
+        "tags": [
+          "Plants"
+        ],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/environments/": {
+      "get": {
+        "tags": [
+          "Environment"
+        ],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/environments/add": {
+      "post": {
+        "tags": [
+          "Environment"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "light_exposure": {
+                  "example": "any"
+                },
+                "environment_type_id": {
+                  "example": "any"
+                },
+                "name": {
+                  "example": "any"
+                },
+                "description": {
+                  "example": "any"
+                },
+                "height": {
+                  "example": "any"
+                },
+                "length": {
+                  "example": "any"
+                },
+                "width": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/environments/delete/{environment_id}": {
+      "delete": {
+        "tags": [
+          "Environment"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "environment_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/environments/edit/{environment_id}": {
+      "patch": {
+        "tags": [
+          "Environment"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "environment_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "light_exposure": {
+                  "example": "any"
+                },
+                "length": {
+                  "example": "any"
+                },
+                "width": {
+                  "example": "any"
+                },
+                "height": {
+                  "example": "any"
+                },
+                "environment_type_name": {
+                  "example": "any"
+                },
+                "environment_id": {
+                  "example": "any"
+                },
+                "creation_date": {
+                  "example": "any"
+                },
+                "last_updated": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/environments/types": {
+      "get": {
+        "tags": [
+          "Environment"
+        ],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/verify/": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/test/upload_image": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    }
+  }
+}

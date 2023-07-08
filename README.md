@@ -1,2 +1,1 @@
-# SweetLeaf-Api
 # CannaLog-Api

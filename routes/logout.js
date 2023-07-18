@@ -19,9 +19,9 @@ router.post('/', (req, res) => {
   // #swagger.ignore = true
   ...
   */
-  res.clearCookie("session",{domain:".sweetleaf.co.za"})
-  res.clearCookie("session_refresh",{domain:".sweetleaf.co.za"})
-  res.clearCookie("user",{domain:".sweetleaf.co.za"})
+  res.clearCookie("session",{domain:".cannalog.co.za"})
+  res.clearCookie("session_refresh",{domain:".cannalog.co.za"})
+  res.clearCookie("user",{domain:".cannalog.co.za"})
   res.sendStatus(200)
 }
 )

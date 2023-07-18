@@ -1,16 +1,18 @@
 const db = require('../../lib/db')
+const { formatToTimeZone } = require('date-fns-timezone');
 const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper')
-
 
   // Query 1
   function insert_plant(req,res,connection) {
 
+    let creation_date = req.body.creation_date
     let plant_name = req.body.name
     let plant_strain = req.body.strain
     let environment_id = req.body.environment
     let irrigation_type = req.body.irrigation
     let public = req.body.public
-    let stage = req.body.stage
+
+    const utcTimestamp = formatToTimeZone(new Date(creation_date), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'Etc/UTC' });
 
     let values = {
       plant_name:`"${plant_name}"`,
@@ -18,7 +20,8 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
       environment_id,
       irrigation_type,
       public,
-      user_id:req.user.user_id
+      user_id:req.user.user_id,
+      creation_date: `"${utcTimestamp}"`
     }
 
     let sql = `INSERT INTO plants (${Object.keys(values)}) VALUES (${Object.values(values)})`
@@ -61,7 +64,7 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
 
           console.log("prev_results",prev_results)
           console.log("req",req.body.stage)
-          let sql = `INSERT INTO plant_stages (plant_id,user_id,plant_action_type_id,plant_stage) VALUES (${prev_results.insertId},${req.user.user_id},${id},${req.body.stage})`
+          let sql = `INSERT INTO plant_stages (plant_id,user_id,plant_action_id,plant_stage) VALUES (${prev_results.insertId},${req.user.user_id},${id},${req.body.stage})`
       
           db.query(sql, (error, results) => {
             if (error) {
@@ -81,7 +84,7 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
   function get_plant(connection,req,res,prev_results) {
 
     let sql = `
-    SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.environment_id,environments.name,plants.views,plants.likes
+    SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,DATE_FORMAT(plants.creation_date,"%Y-%m-%dT%H:%i:%sZ") as creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -112,13 +115,14 @@ module.exports = {
     ...
     */
     let sql = `
-        SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.views,plants.likes
-        FROM users
-        JOIN plants ON users.user_id = plants.user_id
-        JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
-        JOIN strains ON strains.strain_id = plants.plant_strain
-        WHERE plants.public = 1
-        ORDER BY plants.creation_date DESC
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    FROM users
+    JOIN plants ON users.user_id = plants.user_id
+    JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
+    JOIN strains ON strains.strain_id = plants.plant_strain
+    JOIN environments ON environments.environment_id = plants.environment_id
+    WHERE plants.public = 1
+    ORDER BY plants.creation_date DESC
         `
 
     db.query(sql, (err, result, fields) => {
@@ -170,13 +174,12 @@ module.exports = {
     ...
     */
     let sql = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.creation_date,plants.last_updated,plants.environment_id,environments.name,plants.views,plants.likes
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
     JOIN strains ON strains.strain_id = plants.plant_strain
     JOIN environments ON environments.environment_id = plants.environment_id
-  
     WHERE plants.user_id = ?
     ORDER BY plants.creation_date DESC
     `
@@ -240,12 +243,13 @@ module.exports = {
       ...
       */
       let sql = `
-      SELECT plant_stages.creation_date,plant_stages.last_updated,plant_stages.plant_action_type_id,plant_stages.plant_id,plant_stages.plant_stage,plant_stages.plant_stage_id,plant_stages.user_id,stages.stage_name,stages.stage_color
+      SELECT DATE_FORMAT(plant_stages.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,plant_stages.last_updated,plant_stages.plant_action_id,plant_stages.plant_id,plant_stages.plant_stage,plant_stages.plant_stage_id,plant_stages.user_id,stages.stage_name,stages.stage_color
       FROM plant_stages
       JOIN stages ON stages.stage_id = plant_stages.plant_stage
       WHERE plant_id = ?
       AND user_id = ?
       ORDER BY creation_date DESC
+      LIMIT 1
       `
     db.query(sql, [req.body.plant_id, req.user.user_id], (err, result, fields) => {
       if (err) {

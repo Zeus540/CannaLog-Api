@@ -7,6 +7,8 @@ const register = require("./register")
 const plants = require("./plants")
 const environments = require("./environments")
 const irrigation_types = require("./irrigation_types")
+const growers = require("./growers")
+const notes = require("./notes")
 
 
 const router = express.Router()
@@ -22,7 +24,8 @@ router.use("/register", register);
 router.use("/plants", plants);
 router.use("/environments", environments);
 router.use("/irrigation_types", irrigation_types);
-
+router.use("/growers", growers);
+router.use("/notes", notes);
 router.use("/logout", logout);
 router.use("/verify", verify);
 router.use("/test", test);

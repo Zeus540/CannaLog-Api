@@ -36,9 +36,9 @@ router.post('/add',authenticateToken,PlantController.add)
 router.post('/current_stage',authenticateToken,PlantController.current_stage)
 
 router.post('/actions', PlantActionController.get)
-router.get('/actions_types', PlantActionController.getTypes)
+router.get('/actions_types', PlantActionController.getActionTypes)
 
-router.post('/actions/:type', PlantActionController.getActionsByType)
+router.post('/actions/:type', PlantActionController.getActionDataByType)
 router.post('/take_action/:type',authenticateToken, PlantActionController.takeAction)
 
 

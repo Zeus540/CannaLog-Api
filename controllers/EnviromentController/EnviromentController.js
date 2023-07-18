@@ -11,7 +11,7 @@ module.exports = {
       */
 
     let sql = `
-    SELECT environments.environment_id,environments.name,environments.description,environments.light_exposure,environments.cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,length,width,height
+    SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
     FROM environment_types
     JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
     WHERE environments.user_id = ?
@@ -34,19 +34,19 @@ module.exports = {
      ...
      */
      pubClient = req.app.locals.pubClient
-    console.log(isNaN(parseInt(req.body.light_exposure)))
+    console.log(isNaN(parseInt(req.body.environment_light_exposure)))
     let envObj = {
       user_id: req.user.user_id,
       environment_type_id: req.body.environment_type_id == null || undefined ? null : req.body.environment_type_id,
-      name: req.body.name,
-      description: req.body.description == null || undefined ? null : req.body.description,
-      light_exposure: isNaN(parseInt(req.body.light_exposure)) ? null : parseInt(req.body.light_exposure),
-      height: isNaN(parseInt(req.body.height)) ? null : parseInt(req.body.height),
-      length: isNaN(parseInt(req.body.length)) ? null : parseInt(req.body.length),
-      width: isNaN(parseInt(req.body.width)) ? null : parseInt(req.body.width),
-      cover_img: req.body.environment_type_id == 2 ? "https://minio.s3.sweetleaf.co.za/sweetleaf/outdoor2.jpg" : "https://minio.s3.sweetleaf.co.za/sweetleaf/indoor.jpg"
+      environment_name: req.body.environment_name,
+      environment_description: req.body.environment_description == null || undefined ? null : req.body.environment_description,
+      environment_light_exposure: isNaN(parseInt(req.body.environment_light_exposure)) ? null : parseInt(req.body.environment_light_exposure),
+      environment_height: isNaN(parseInt(req.body.environment_height)) ? null : parseInt(req.body.environment_height),
+      environment_length: isNaN(parseInt(req.body.environment_length)) ? null : parseInt(req.body.environment_length),
+      environment_width: isNaN(parseInt(req.body.environment_width)) ? null : parseInt(req.body.environment_width),
+      environment_cover_img: req.body.environment_type_id == 2 ? "https://s3.cannalog.co.za/sweetleaf/outdoor2.jpg" : "https://s3.cannalog.co.za/sweetleaf/indoor.jpg"
     }
-
+    
 
     console.log(req.body)
     const sql = 'INSERT INTO environments SET ?';
@@ -77,18 +77,18 @@ module.exports = {
       // #swagger.tags = ['Environment']
       ...
       */
-
-    if (isNaN(parseInt(req.body.light_exposure))) {
-     req.body.light_exposure = null
+      pubClient = req.app.locals.pubClient
+    if (isNaN(parseInt(req.body.environment_light_exposure))) {
+     req.body.environment_light_exposure = null
     }
-    if (isNaN(parseInt(req.body.length))) {
-      req.body.length = null
+    if (isNaN(parseInt(req.body.environment_length))) {
+      req.body.environment_length = null
     }
-    if (isNaN(parseInt(req.body.width))) {
-      req.body.width = null
+    if (isNaN(parseInt(req.body.environment_width))) {
+      req.body.environment_width = null
     }
-    if (isNaN(parseInt(req.body.height))) {
-      req.body.height = null
+    if (isNaN(parseInt(req.body.environment_height))) {
+      req.body.environment_height = null
     }
 
     delete req.body.environment_type_name
@@ -139,17 +139,19 @@ module.exports = {
 
       } else {
         
+        if(result.affectedRows > 0 ){
         let payload = {
           type: "environment_deleted",
           user: req.user,
-          data: result.affectedRows
+          data: result.affectedRows,
+          id: req.params.environment_id,
         }
       
         let str_payload = JSON.stringify(payload)
         pubClient.publish(channel, str_payload)
-  
         res.send(result)
-
+        }
+      
       }
     })
   },

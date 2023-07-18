@@ -32,7 +32,7 @@ const io = new Server(server, {
 	},
 	cookie: {
 		httpOnly: true // Enable HTTP-only cookies
-	  }
+	}
 });
 
 io.adapter(createAdapter(pubClient, subClient));
@@ -57,18 +57,19 @@ app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
 //Websocket Connections
 io.on('connection', (socket, req) => {
-	
+
 
 	const yourCookieValue = socket.request.headers.cookie
-	.split(';')
-	.map(cookie => cookie.trim())
-	.find(cookie => cookie.startsWith('session'));
-	
-	let jwt_token = yourCookieValue.split("=")[1]
+		?.split(';')
+		?.map(cookie => cookie.trim())
+		?.find(cookie => cookie.startsWith('session'));
 
-	jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
-		
-		let sql = `
+	let jwt_token = yourCookieValue?.split("=")[1]
+console.log("jwt_token",jwt_token)
+	if (jwt_token !== undefined) {
+		jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
+
+			let sql = `
 		UPDATE users
 		SET is_logged_in = 1
 		WHERE user_id = ?`
@@ -77,20 +78,22 @@ io.on('connection', (socket, req) => {
 					console.log(err)
 
 				} else {
-					console.log(user.user_name,'connected');
+					console.log(user.user_name, 'connected');
 				}
 			})
-	})
-	
+		})
+	}
 
 	//Redis Subscribe 
 	subClient.subscribe(channel, (payload) => {
+
 		payload = JSON.parse(payload)
+
 		switch (payload.type) {
 			case "add_environment":
 
 			let sql = `
-			SELECT environments.environment_id,environments.name,environments.description,environments.light_exposure,environments.cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,length,width,height
+			SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
 			FROM environment_types
 			JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
 			WHERE environments.environment_id = ?
@@ -100,53 +103,41 @@ io.on('connection', (socket, req) => {
 						console.log(err)
 
 					} else {
-						socket.emit("environment_add",result[0])
-					
+						socket.emit(`environment_added${payload.user.user_id}`, result[0])
+
 					}
 				})
-			
+
 				break;
-				
+
 			case "environment_edited":
 				console.log('environment_edited')
 				let sql_edited = `
-				SELECT environments.environment_id,environments.name,environments.description,environments.light_exposure,environments.cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,length,width,height
+				SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
 				FROM environment_types
 				JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
 				WHERE environments.environment_id = ?
 				`
-					db.query(sql_edited, [payload.data], (err, result, fields) => {
-						if (err) {
-							console.log(err)
-	
-						} else {
-							console.log(err,result[0])
-							socket.emit("environment_edited",result[0])
-						
-						}
-					})
-				
-					break;
-			
-			case "environment_deleted":
+				db.query(sql_edited, [payload.data], (err, result, fields) => {
+					if (err) {
+						console.log(err)
 
-				let sql_select_environments = `
-				SELECT environments.environment_id,environments.name,environments.description,environments.light_exposure,environments.cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,length,width,height
-				FROM environment_types
-				JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
-				WHERE environments.user_id = ?
-				`
-			console.log("payload.user.user_id",payload.user.user_id)
-				db.query(sql_select_environments, [payload.user.user_id], (err, result, fields) => {
-				if (err) {
-					console.log(err)
-			
-				} else {
-					socket.emit("environment_deleted",result)
-				
-				}
+					} else {
+						console.log(err, result[0])
+						socket.emit(`environment_edited${payload.user.user_id}`, result[0])
+
+					}
 				})
+
 				break;
+
+			case "environment_deleted":
+			socket.emit(`environment_deleted${payload.user.user_id}`, payload.id)
+			break;
+			
+			case "note_added":
+			socket.emit(`note_added${payload.user.user_id}`, payload.id)
+			break;
 
 			default:
 			break;
@@ -161,15 +152,17 @@ io.on('connection', (socket, req) => {
 	socket.on('disconnect', () => {
 
 		const yourCookieValue = socket.request.headers.cookie
-		.split(';')
-		.map(cookie => cookie.trim())
-		.find(cookie => cookie.startsWith('session'));
-		
-		let jwt_token = yourCookieValue.split("=")[1]
+			?.split(';')
+			?.map(cookie => cookie.trim())
+			?.find(cookie => cookie.startsWith('session'));
 
-		jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
-			
-			let sql = `
+	let jwt_token = yourCookieValue?.split("=")[1]
+	console.log("jwt_token",jwt_token)
+		if (jwt_token !== undefined) {
+
+			jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
+
+				let sql = `
 			UPDATE users
 			SET is_logged_in = 0
 			WHERE user_id = ?`
@@ -178,16 +171,16 @@ io.on('connection', (socket, req) => {
 						console.log(err)
 
 					} else {
-						console.log(user.user_name,'disconnected');
+						console.log(user.user_name, 'disconnected');
 					}
 				})
-		})
-		
-	
+			})
+		}
+
 	});
 })
 
 
-server.listen(9954,()=>{console.log('App listening on port 9954')})
+server.listen(10000, () => { console.log('App listening on port 9954') })
 
 

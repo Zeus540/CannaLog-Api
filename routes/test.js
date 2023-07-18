@@ -18,7 +18,7 @@ const db = createPool({
 
 
 var minioClient = new Minio.Client({
-    endPoint: 'minio.s3.sweetleaf.co.za',
+    endPoint: 'minio.cannalog.co.za',
     port: 9995,
     useSSL: false,
     accessKey: 'SweetLeaf',
@@ -125,11 +125,11 @@ router.post('/upload_image', upload.single("file"), async (req, res) => {
 
     try {
         await resizeAndUploadImage(originalPath, originalFileName, sizes, formats)
-        let path = "http://minio.s3.sweetleaf.co.za/sweetleaf/"
+        let path = "http://s3.cannalog.co.za/sweetleaf/"
 
         let nexGen = originalFileName.split(".")[0]
 
-        sqlInsertPlantData = `INSERT INTO Diary_Images (Image,ImageNextGen,ImageThumbnail,ImageThumbnailNextGen,CoverImage,CoverImageNextGen,DayId, WeekId, DiaryId) VALUES ("http://minio.s3.sweetleaf.co.za/sweetleaf/${"full-" + originalFileName}","http://minio.s3.sweetleaf.co.za/sweetleaf/${"full-" + nexGen + ".webp"}","http://minio.s3.sweetleaf.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + originalFileName}","http://minio.s3.sweetleaf.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + nexGen + ".webp"}","http://minio.s3.sweetleaf.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + originalFileName}","http://minio.s3.sweetleaf.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + nexGen + ".webp"}",581,567,284)`
+        sqlInsertPlantData = `INSERT INTO Diary_Images (Image,ImageNextGen,ImageThumbnail,ImageThumbnailNextGen,CoverImage,CoverImageNextGen,DayId, WeekId, DiaryId) VALUES ("http://s3.cannalog.co.za/sweetleaf/${"full-" + originalFileName}","http://s3.cannalog.co.za/sweetleaf/${"full-" + nexGen + ".webp"}","http://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + originalFileName}","http://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + nexGen + ".webp"}","http://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + originalFileName}","http://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + nexGen + ".webp"}",581,567,284)`
 
         await db.query(sqlInsertPlantData, (err, result, fields) => {
             if (err) {
@@ -146,9 +146,6 @@ router.post('/upload_image', upload.single("file"), async (req, res) => {
         console.log("error", error)
         res.status(500).json({ error: "Image upload failed" })
     }
-
-
-
 
 })
 

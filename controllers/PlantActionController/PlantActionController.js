@@ -426,14 +426,14 @@ module.exports = {
 
      try {
          await resizeAndUploadImage(originalPath, originalFileName, sizes, formats)
-         let path = "http://s3.cannalog.co.za/sweetleaf/"
+         let path = "https://s3.cannalog.co.za/sweetleaf/"
 
          let nexGen = originalFileName.split(".")[0]
 
         sqlInsertPlantData = `
          INSERT INTO plant_images (full_img,full_img_next_gen,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,plant_id, plant_action_id, user_id) 
          VALUES 
-         ("http://s3.cannalog.co.za/sweetleaf/${"full-" + originalFileName}","http://s3.cannalog.co.za/sweetleaf/${"full-" + nexGen + ".webp"}","http://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + originalFileName}","http://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + nexGen + ".webp"}","http://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + originalFileName}","http://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + nexGen + ".webp"}",${req.body.plant_id},${result.insertId},${req.user.user_id})`
+         ("https://s3.cannalog.co.za/sweetleaf/${"full-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${"full-" + nexGen + ".webp"}","https://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + nexGen + ".webp"}","https://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + nexGen + ".webp"}",${req.body.plant_id},${result.insertId},${req.user.user_id})`
 
          await db.query(sqlInsertPlantData, (err, result, fields) => {
              if (err) {

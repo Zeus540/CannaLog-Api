@@ -234,6 +234,6 @@ console.log("jwt_token",jwt_token)
 })
 
 
-server.listen(10001, () => { console.log('App listening on port 10001') })
+server.listen(10000, () => { console.log('App listening on port 10001') })
 
 

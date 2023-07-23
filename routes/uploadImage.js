@@ -18,7 +18,7 @@ const db = createPool({
 
 
 var minioClient = new Minio.Client({
-    endPoint: 'minio.cannalog.co.za',
+    endPoint: 'https://minio.cannalog.co.za',
     port: 9995,
     useSSL: false,
     accessKey: 'SweetLeaf',

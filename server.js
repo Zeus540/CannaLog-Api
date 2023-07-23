@@ -27,7 +27,7 @@ subClient.connect()
 
 const io = new Server(server, {
 	cors: {
-		origin: true,
+		origin: 'https://cannalog.co.za',
 		credentials: true
 	},
 	cookie: {

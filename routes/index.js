@@ -1,7 +1,6 @@
 const express = require('express')
 const logout = require("./logout")
 const verify = require("./verify")
-const test = require("./test")
 const login = require("./login")
 const register = require("./register")
 const plants = require("./plants")
@@ -28,6 +27,5 @@ router.use("/growers", growers);
 router.use("/notes", notes);
 router.use("/logout", logout);
 router.use("/verify", verify);
-router.use("/test", test);
 
 module.exports = router

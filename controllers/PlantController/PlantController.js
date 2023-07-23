@@ -36,14 +36,14 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
       console.log('Results of query 1: ', results);
 
       // Continue with other queries or commit the transaction
-      insert_plant_action(connection,req,res,results);
+      insert_plant_action(connection,req,res,results,utcTimestamp);
     });
   }
 
   // Query 2
-  function insert_plant_action(connection,req,res,prev_results) {
+  function insert_plant_action(connection,req,res,prev_results,utcTimestamp) {
 
-      let sql = `INSERT INTO plant_actions (plant_id,user_id,plant_action_type_id) VALUES (${prev_results.insertId},${req.user.user_id},14)`
+      let sql = `INSERT INTO plant_actions (plant_id,user_id,plant_action_type_id,creation_date) VALUES (${prev_results.insertId},${req.user.user_id},14,'${utcTimestamp}')`
   
       db.query(sql, (error, results) => {
         if (error) {
@@ -55,16 +55,16 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
         console.log('Results of query 2: ', results);
   
         // Continue with other queries or commit the transaction
-        insert_plant_strain_action(connection,req,res,prev_results,results.insertId);
+        insert_plant_strain_action(connection,req,res,prev_results,results.insertId,utcTimestamp);
       });
   }
 
   // Query 3
-  function insert_plant_strain_action(connection,req,res,prev_results,id) {
+  function insert_plant_strain_action(connection,req,res,prev_results,id,utcTimestamp) {
 
           console.log("prev_results",prev_results)
           console.log("req",req.body.stage)
-          let sql = `INSERT INTO plant_stages (plant_id,user_id,plant_action_id,plant_stage) VALUES (${prev_results.insertId},${req.user.user_id},${id},${req.body.stage})`
+          let sql = `INSERT INTO plant_stages (plant_id,user_id,plant_action_id,plant_stage,creation_date,last_updated) VALUES (${prev_results.insertId},${req.user.user_id},${id},${req.body.stage},'${utcTimestamp}','${utcTimestamp}')`
       
           db.query(sql, (error, results) => {
             if (error) {

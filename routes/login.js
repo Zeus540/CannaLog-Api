@@ -83,26 +83,26 @@ router.post('/', (req, res) => {
 
 
                 res.cookie("session", token, {
-                  sameSite:'strict',
-                  secure: true,
-                  httpOnly: true ,
-                  domain:".cannalog.co.za",
+                  //sameSite:'strict',
+                  //secure: true,
+                  //httpOnly: true ,
+                  //domain:".cannalog.co.za",
                   expires: dayjs().add(30, "seconds").toDate(),
                 });
 
                 res.cookie("session_refresh", refreshtoken, {
-                  sameSite:'strict',
-                  secure: true,
-                  httpOnly: true ,
-                  domain:".cannalog.co.za",
+                  //sameSite:'strict',
+                  //secure: true,
+                  //httpOnly: true ,
+                  //domain:".cannalog.co.za",
                   expires: dayjs().add(7, "days").toDate(),
                 });
 
                 res.cookie("user", JSON.stringify(UserObjCleaned), {
-                  sameSite:'strict',
-                  secure: true,
-                  httpOnly: false ,
-                  domain:".cannalog.co.za",
+                  //sameSite:'strict',
+                  //secure: true,
+                  //httpOnly: false ,
+                  //domain:".cannalog.co.za",
                   expires: dayjs().add(7, "days").toDate(),
                 });
                 res.sendStatus(200)

@@ -135,8 +135,61 @@ console.log("jwt_token",jwt_token)
 			socket.emit(`environment_deleted${payload.user.user_id}`, payload.id)
 			break;
 			
+			case "action_taken":
+
+					let action_taken_sql = `
+					SELECT plant_action_types.plant_action_type_name, plant_actions.plant_action_id,plant_actions.plant_id,DATE_FORMAT(plant_actions.creation_date, "%Y-%m-%dT%H:%i:%sZ") creation_date,plant_actions.plant_action_type_id
+					FROM plant_action_types
+					JOIN plant_actions ON plant_action_types.plant_action_type_id = plant_actions.plant_action_type_id
+				
+					WHERE plant_actions.plant_id = ?
+					ORDER BY plant_actions.creation_date DESC
+						`
+				
+					db.query(action_taken_sql, [payload.plant_id], (err, result, fields) => {
+					if (err) {
+						console.log(err)
+					} else {
+						socket.emit(`action_taken${payload.plant_id}`, result)
+					}
+					})
+			break;
+			
+			case "stage_changed":
+
+				let stage_changed_sql = `
+				SELECT plant_stages.plant_stage,plant_stages.user_id, plant_stages.plant_id,plant_stages.plant_stage_id,stages.stage_name,plant_stages.plant_action_id,DATE_FORMAT(plant_stages.creation_date, "%Y-%m-%dT%H:%i:%sZ")as creation_date,stages.stage_color
+				FROM plant_stages
+				JOIN stages ON plant_stage = stages.stage_id
+				WHERE plant_stages.plant_id = ?
+				ORDER BY creation_date DESC
+				`
+			
+				db.query(stage_changed_sql, [payload.plant_id], (err, result, fields) => {
+				if (err) {
+					console.log(err)
+				} else {
+					socket.emit(`stage_changed${payload.plant_id}`, result[0])
+				}
+				})
+			break;
+				
 			case "note_added":
-			socket.emit(`note_added${payload.user.user_id}`, payload.id)
+
+			let note_added_sql = `
+			SELECT plant_note_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
+			WHERE plant_notes.plant_id = ?
+			ORDER BY creation_date DESC
+			`
+		
+			db.query(note_added_sql, [payload.plant_id], (err, result, fields) => {
+			if (err) {
+				console.log(err)
+			} else {
+				socket.emit(`note_added${payload.plant_id}`, result[0])
+			}
+			})
+		
 			break;
 
 			default:
@@ -181,6 +234,6 @@ console.log("jwt_token",jwt_token)
 })
 
 
-server.listen(10000, () => { console.log('App listening on port 9954') })
+server.listen(10000, () => { console.log('App listening on port 10001') })
 
 

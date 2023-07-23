@@ -92,7 +92,7 @@ router.post('/', (req, res) => {
 
                 res.cookie("session_refresh", refreshtoken, {
                   sameSite:'strict',
-                  secure: true,
+                  secure: true, 
                   httpOnly: true ,
                   domain:".cannalog.co.za",
                   expires: dayjs().add(7, "days").toDate(),

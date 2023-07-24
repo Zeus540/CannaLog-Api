@@ -47,10 +47,12 @@ const resizeAndUploadImage = async (originalPath, originalFileName, sizes, forma
           let originalFileNameFull = "full-" + originalFileName.split(".")[0] + "." + format
 
           let sharpObject = sharp(originalPath)
+          
           if (format === "webp") {
 
               await sharpObject
                   .rotate() // Keep the image rotation
+                  .withMetadata() 
                   .toFormat(format)
                   .webp({ quality: 40, reductionEffort: 80, }) // Adjust the quality value as desired (0-100)
                   .toFile("./tmp/" + originalFileNameFull);
@@ -58,6 +60,7 @@ const resizeAndUploadImage = async (originalPath, originalFileName, sizes, forma
           } else if (format === "jpg") {
               await sharpObject
                   .rotate() // Keep the image rotation
+                  .withMetadata() 
                   .toFormat(format)
                   .flatten({ background: { r: 255, g: 255, b: 255 } }) // Specify the background color as desired (white in this example)
                   .jpeg({ quality: 50 }) // Adjust the quality value as desired (0-100)
@@ -82,6 +85,7 @@ const resizeAndUploadImage = async (originalPath, originalFileName, sizes, forma
                           fit: 'cover',
                           position: 'center',
                       })
+                      .withMetadata()
                       .toFormat(format)
                       .toFile("./tmp/" + ResizedFileName)
               }

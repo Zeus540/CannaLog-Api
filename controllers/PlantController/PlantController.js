@@ -85,7 +85,7 @@ const Understand = require('twilio/lib/rest/preview/Understand');
   function get_plant(connection,req,res,prev_results) {
 
     let sql = `
-    SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,DATE_FORMAT(plants.creation_date,"%Y-%m-%dT%H:%i:%sZ") as creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail, DATE_FORMAT(plants.creation_date,"%Y-%m-%dT%H:%i:%sZ") as creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -118,7 +118,7 @@ module.exports = {
     
 
     let sql = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -145,7 +145,7 @@ module.exports = {
     
 
     let sql = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -207,7 +207,7 @@ module.exports = {
     ...
     */
     let sql = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -318,12 +318,13 @@ module.exports = {
       */
       let sql = `
       UPDATE plants
-      SET cover_img = ?
+      SET cover_img = ?, cover_thumbnail = ?
       WHERE plant_id = ?
       `
 console.log("req.body.cover_img",req.body.cover_img)
-console.log("req.body.plant_id",req.params.plant_id)
-    db.query(sql, [req.body.cover_img,req.params.plant_id], (err, result, fields) => {
+console.log("req.body.cover_thumbnail",req.body.cover_thumbnail)
+
+    db.query(sql, [req.body.cover_img,req.body.cover_thumbnail,req.params.plant_id], (err, result, fields) => {
       if (err) {
         console.log(err)
       } else {

@@ -9,6 +9,7 @@ module.exports = {
       */
             let sql = `
             SELECT * FROM irrigation_types
+            ORDER BY irrigation_types.irrigation_type
             `
     
             db.query(sql, (err, result, fields) => {

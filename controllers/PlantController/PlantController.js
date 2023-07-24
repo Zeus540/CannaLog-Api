@@ -172,6 +172,7 @@ module.exports = {
     */
     let sql = `
             SELECT * FROM strains
+            ORDER BY strains.strain_name
             `
 
     db.query(sql, (err, result, fields) => {

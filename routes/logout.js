@@ -22,6 +22,9 @@ router.post('/', (req, res) => {
   res.clearCookie("session",{domain:".cannalog.co.za"})
   res.clearCookie("session_refresh",{domain:".cannalog.co.za"})
   res.clearCookie("user",{domain:".cannalog.co.za"})
+  res.clearCookie("session")
+  res.clearCookie("session_refresh")
+  res.clearCookie("user")
   res.sendStatus(200)
 }
 )

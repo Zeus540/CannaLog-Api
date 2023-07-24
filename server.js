@@ -73,12 +73,12 @@ console.log("jwt_token",jwt_token)
 		UPDATE users
 		SET is_logged_in = 1
 		WHERE user_id = ?`
-			db.query(sql, [await user.user_id], (err, result, fields) => {
+			db.query(sql, [await user?.user_id], (err, result, fields) => {
 				if (err) {
 					console.log(err)
 
 				} else {
-					console.log(user.user_name, 'connected');
+					console.log(user?.user_name, 'connected');
 				}
 			})
 		})
@@ -219,12 +219,12 @@ console.log("jwt_token",jwt_token)
 			UPDATE users
 			SET is_logged_in = 0
 			WHERE user_id = ?`
-				db.query(sql, [await user.user_id], (err, result, fields) => {
+				db.query(sql, [await user?.user_id], (err, result, fields) => {
 					if (err) {
 						console.log(err)
 
 					} else {
-						console.log(user.user_name, 'disconnected');
+						console.log(user?.user_name, 'disconnected');
 					}
 				})
 			})
@@ -234,6 +234,6 @@ console.log("jwt_token",jwt_token)
 })
 
 
-server.listen(10000, () => { console.log('App listening on port 10001') })
+server.listen(10000, () => { console.log('App listening on port 10000') })
 
 

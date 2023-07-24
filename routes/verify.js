@@ -28,16 +28,16 @@ router.post('/',(req,res) =>{
     const Token = req.body.token;
     
     //Getting userList 
-    db.query(`select * from Users`,(err,result,fields)=>{
+    db.query(`select * from users`,(err,result,fields)=>{
         UserList = JSON.parse(JSON.stringify(result))
         
     //Checking Verification_Code against userList 
-    if(UserList.find(User => User.Verification_Code === Token)){
+    if(UserList.find(User => User.verification_code === Token)){
 
-      let UserFound = UserList.find(User => User.Verification_Code === Token)
-      let sqlUpdateThumbnail = `UPDATE Users SET Verification_Status=? WHERE UserId=?`
+      let UserFound = UserList.find(User => User.verification_code === Token)
+      let sqlUpdateThumbnail = `UPDATE users SET verification_status=? WHERE UserId=?`
 
-      let data = [1, UserFound.UserId];
+      let data = [1, UserFound.user_id];
 
       db.query(sqlUpdateThumbnail,data,(err,result,fields)=>{
         res.json(

@@ -104,7 +104,7 @@ router.post('/',(req,res) =>{
                       dynamicTemplateData: {
                         subject: 'Account Verfication Email For Sweetleaf',
                         body: `asdasdasd`,
-                        url: `https://sweetleaf.co.za/verify/${Code}`,
+                        url: `https://cannalog.co.za/verify/${Code}`,
                         name: Name,
               
                       },

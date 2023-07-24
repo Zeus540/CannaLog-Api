@@ -258,6 +258,27 @@ module.exports = {
         res.send(result[0])
       }
     })
+  },
+  update_cover_image: (req, res) => {
+    /* ...
+      // #swagger.tags = ['Plants']
+      ...
+      */
+      let sql = `
+      UPDATE plants
+      SET cover_img = ?
+      WHERE plant_id = ?
+      `
+console.log("req.body.cover_img",req.body.cover_img)
+console.log("req.body.plant_id",req.params.plant_id)
+    db.query(sql, [req.body.cover_img,req.params.plant_id], (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.send(result[0])
+      }
+    })
   }
+
 }
 

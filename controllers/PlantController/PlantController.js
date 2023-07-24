@@ -1,6 +1,7 @@
 const db = require('../../lib/db')
 const { formatToTimeZone } = require('date-fns-timezone');
-const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper')
+const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper');
+const Understand = require('twilio/lib/rest/preview/Understand');
 
   // Query 1
   function insert_plant(req,res,connection) {
@@ -114,6 +115,8 @@ module.exports = {
     // #swagger.tags = ['Plants']
     ...
     */
+    
+
     let sql = `
     SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
     FROM users
@@ -123,7 +126,7 @@ module.exports = {
     JOIN environments ON environments.environment_id = plants.environment_id
     WHERE plants.public = 1
     ORDER BY plants.creation_date DESC
-        `
+    `
 
     db.query(sql, (err, result, fields) => {
       if (err) {
@@ -132,6 +135,35 @@ module.exports = {
         res.send(result)
       }
     })
+   
+  },
+  getPublicSignedIn: (req, res) => {
+    /* ...
+    // #swagger.tags = ['Plants']
+    ...
+    */
+    
+
+    let sql = `
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    FROM users
+    JOIN plants ON users.user_id = plants.user_id
+    JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
+    JOIN strains ON strains.strain_id = plants.plant_strain
+    JOIN environments ON environments.environment_id = plants.environment_id
+    WHERE plants.public = 1
+    AND plants.user_id != ?
+    ORDER BY plants.creation_date DESC
+    `
+
+    db.query(sql,[req.user.user_id], (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.send(result)
+      }
+    })
+   
   },
   getStrains: (req, res) => {
     /* ...
@@ -247,11 +279,10 @@ module.exports = {
       FROM plant_stages
       JOIN stages ON stages.stage_id = plant_stages.plant_stage
       WHERE plant_id = ?
-      AND user_id = ?
       ORDER BY creation_date DESC
       LIMIT 1
       `
-    db.query(sql, [req.body.plant_id, req.user.user_id], (err, result, fields) => {
+    db.query(sql, [req.body.plant_id], (err, result, fields) => {
       if (err) {
         console.log(err)
       } else {
@@ -259,6 +290,26 @@ module.exports = {
       }
     })
   },
+  current_environment: (req, res) => {
+    /* ...
+      // #swagger.tags = ['Plants']
+      ...
+      */
+      let sql = `
+      SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
+      FROM environment_types
+      JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
+      WHERE environments.environment_id = ?
+      `
+    db.query(sql, [req.body.environment_id], (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.send(result[0])
+      }
+    })
+  },
+
   update_cover_image: (req, res) => {
     /* ...
       // #swagger.tags = ['Plants']

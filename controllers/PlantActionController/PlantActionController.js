@@ -208,10 +208,9 @@ module.exports = {
     const utcTimestamp = formatToTimeZone(new Date(req.body.creation_date), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'Etc/UTC' });
 
    
-    console.log(req.params.type == 4)
+
 
     switch (parseInt(req.params.type)) {
-
 
       case 14:
         function insert_stage_action(req, res, connection, prev_result) {
@@ -363,20 +362,10 @@ module.exports = {
       break;
 
       case 4:
-
-      console.log("req.body",req.body)
-        // function insert_note_action(req, res, connection, prev_result) {
-        //     insert_note_action_sql = `
-        //     INSERT INTO plant_images (plant_action_id, user_id,plant_id,plant_note, creation_date,last_updated) 
-        //     VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},'${req.body.plant_note}','${utcTimestamp}','${utcTimestamp}')`
-  
-        //     db.query(insert_note_action_sql, (err, result, fields) => {
-        //       if (err) {
-        //         console.log(err)
-        //         rollback(connection, res);
-        //       } else {
-
-        //         let payload = {
+ 
+      console.log("req.body",req.body.creation_date)
+      console.log("utcTimestamp",utcTimestamp)
+      //let payload = {
         //           type: "note_added",
         //           user: req.user,
         //           plant_id:req.body.plant_id,
@@ -386,11 +375,6 @@ module.exports = {
         //         let str_payload = JSON.stringify(payload)
         //         pubClient.publish(channel, str_payload)
 
-        //         res.send(result)
-        //       }
-        //     })
-  
-        // }
         function insert_action_image(req, res, connection) {
             sql = `INSERT INTO plant_actions (plant_id, user_id, plant_action_type_id, creation_date) VALUES (${req.body.plant_id},${req.user.user_id},${parseInt(req.params.type)},'${utcTimestamp}')`
   
@@ -400,15 +384,15 @@ module.exports = {
                 rollback(connection, res);
               } else {
 
-                // let payload = {
-                //   type: "action_taken",
-                //   user: req.user,
-                //   plant_id:req.body.plant_id,
-                //   data: result.insertId
-                // }
+                 let payload = {
+                   type: "action_taken",
+                   user: req.user,
+                   plant_id:req.body.plant_id,
+                   data: result.insertId
+                 }
         
-                // let str_payload = JSON.stringify(payload)
-                // pubClient.publish(channel, str_payload)
+                 let str_payload = JSON.stringify(payload)
+                 pubClient.publish(channel, str_payload)
 
                      
      let originalPath = req.file.path
@@ -431,9 +415,9 @@ module.exports = {
          let nexGen = originalFileName.split(".")[0]
 
         sqlInsertPlantData = `
-         INSERT INTO plant_images (full_img,full_img_next_gen,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,plant_id, plant_action_id, user_id) 
+         INSERT INTO plant_images (full_img,full_img_next_gen,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,plant_id, plant_action_id, user_id,creation_date) 
          VALUES 
-         ("https://s3.cannalog.co.za/sweetleaf/${"full-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${"full-" + nexGen + ".webp"}","https://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + nexGen + ".webp"}","https://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + nexGen + ".webp"}",${req.body.plant_id},${result.insertId},${req.user.user_id})`
+         ("https://s3.cannalog.co.za/sweetleaf/${"full-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${"full-" + nexGen + ".webp"}","https://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + nexGen + ".webp"}","https://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + nexGen + ".webp"}",${req.body.plant_id},${result.insertId},${req.user.user_id},'${utcTimestamp}')`
 
          await db.query(sqlInsertPlantData, (err, result, fields) => {
              if (err) {

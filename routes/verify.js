@@ -35,7 +35,7 @@ router.post('/',(req,res) =>{
     if(UserList.find(User => User.verification_code === Token)){
 
       let UserFound = UserList.find(User => User.verification_code === Token)
-      let sqlUpdateThumbnail = `UPDATE users SET verification_status=? WHERE UserId=?`
+      let sqlUpdateThumbnail = `UPDATE users SET verification_status=? WHERE user_id=?`
 
       let data = [1, UserFound.user_id];
 

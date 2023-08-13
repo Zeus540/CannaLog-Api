@@ -12,7 +12,7 @@ const db = createPool({
     port: process.env.DB_PORT,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_SWEETLEAF,
+    database: process.env.DB_NAME,
     connectionLimit: 1000,
 });
 
@@ -136,6 +136,7 @@ router.post('/upload_image', upload.single("file"), async (req, res) => {
                 console.log(err)
             } else {
                
+         
                 res.end(`Image Uploaded Successfully`)
             }
         });

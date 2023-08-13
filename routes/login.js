@@ -13,7 +13,7 @@ const db = createPool({
   port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_SWEETLEAF,
+  database: process.env.DB_NAME,
   connectionLimit: 2000,
 });
 
@@ -83,26 +83,26 @@ router.post('/', (req, res) => {
 
 
                 res.cookie("session", token, {
-                  sameSite:'strict',
-                  secure: true,
-                  httpOnly: true ,
-                  domain:".cannalog.co.za",
+                  //sameSite:'strict',
+                  //secure: true,
+                  //httpOnly: true ,
+                  //domain:".cannalog.co.za",
                   expires: dayjs().add(30, "seconds").toDate(),
                 });
 
                 res.cookie("session_refresh", refreshtoken, {
-                  sameSite:'strict',
-                  secure: true, 
-                  httpOnly: true ,
-                  domain:".cannalog.co.za",
+                  //sameSite:'strict',
+                  //secure: true, 
+                  //httpOnly: true ,
+                  //domain:".cannalog.co.za",
                   expires: dayjs().add(7, "days").toDate(),
                 });
 
                 res.cookie("user", JSON.stringify(UserObjCleaned), {
-                  sameSite:'strict',
-                  secure: true,
-                  httpOnly: false ,
-                  domain:".cannalog.co.za",
+                  //sameSite:'strict',
+                  //secure: true,
+                  //httpOnly: false ,
+                  //domain:".cannalog.co.za",
                   expires: dayjs().add(7, "days").toDate(),
                 });
                 res.sendStatus(200)

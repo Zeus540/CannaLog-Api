@@ -1,7 +1,8 @@
 const db = require('../../lib/db')
 const { formatToTimeZone } = require('date-fns-timezone');
 const { rollback, commit, releaseConnectionAndRespond } = require('../../lib/db_helper')
-let channel = "SweetLeaf"
+require('dotenv').config()
+
 var Minio = require("minio");
 
 const sharp = require('sharp');
@@ -65,7 +66,15 @@ const resizeAndUploadImage = async (originalPath, originalFileName, sizes, forma
                   .flatten({ background: { r: 255, g: 255, b: 255 } }) // Specify the background color as desired (white in this example)
                   .jpeg({ quality: 50 }) // Adjust the quality value as desired (0-100)
                   .toFile("./tmp/" + originalFileNameFull);
-          }
+          }else if (format === "png") {
+            await sharpObject
+                .rotate() // Keep the image rotation
+                .withMetadata() 
+                .toFormat(format)
+                .flatten({ background: { r: 255, g: 255, b: 255 } }) // Specify the background color as desired (white in this example)
+                .jpeg({ quality: 50 }) // Adjust the quality value as desired (0-100)
+                .toFile("./tmp/" + originalFileNameFull);
+        }
 
           await uploadToMinio("./tmp/" + originalFileNameFull, originalFileNameFull)
 
@@ -211,9 +220,6 @@ module.exports = {
     pubClient = req.app.locals.pubClient
     const utcTimestamp = formatToTimeZone(new Date(req.body.creation_date), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'Etc/UTC' });
 
-   
-
-
     switch (parseInt(req.params.type)) {
 
       case 14:
@@ -236,7 +242,7 @@ module.exports = {
               }
       
               let str_payload = JSON.stringify(payload)
-              pubClient.publish(channel, str_payload)
+              pubClient.publish(process.env.CHANNEL, str_payload)
 
               
               res.send(result)
@@ -261,7 +267,7 @@ module.exports = {
               }
       
               let str_payload = JSON.stringify(payload)
-              pubClient.publish(channel, str_payload)
+              pubClient.publish(process.env.CHANNEL, str_payload)
 
               insert_stage_action(req, res, connection, result)
             }
@@ -295,7 +301,7 @@ module.exports = {
         function insert_note_action(req, res, connection, prev_result) {
             insert_note_action_sql = `
             INSERT INTO plant_notes (plant_action_id, user_id,plant_id,plant_note, creation_date,last_updated) 
-            VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},'${req.body.plant_note}','${utcTimestamp}','${utcTimestamp}')`
+            VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},"${req.body.plant_note}",'${utcTimestamp}','${utcTimestamp}')`
   
             db.query(insert_note_action_sql, (err, result, fields) => {
               if (err) {
@@ -311,7 +317,7 @@ module.exports = {
                 }
         
                 let str_payload = JSON.stringify(payload)
-                pubClient.publish(channel, str_payload)
+                pubClient.publish(process.env.CHANNEL, str_payload)
 
                 res.send(result)
               }
@@ -335,7 +341,7 @@ module.exports = {
                 }
         
                 let str_payload = JSON.stringify(payload)
-                pubClient.publish(channel, str_payload)
+                pubClient.publish(process.env.CHANNEL, str_payload)
 
                 insert_note_action(req, res, connection, result)
               }
@@ -377,7 +383,7 @@ module.exports = {
         //         }
         
         //         let str_payload = JSON.stringify(payload)
-        //         pubClient.publish(channel, str_payload)
+        //         pubClient.publish(process.env.CHANNEL, str_payload)
 
         function insert_action_image(req, res, connection) {
             sql = `INSERT INTO plant_actions (plant_id, user_id, plant_action_type_id, creation_date) VALUES (${req.body.plant_id},${req.user.user_id},${parseInt(req.params.type)},'${utcTimestamp}')`
@@ -396,7 +402,7 @@ module.exports = {
                  }
         
                  let str_payload = JSON.stringify(payload)
-                 pubClient.publish(channel, str_payload)
+                 pubClient.publish(process.env.CHANNEL, str_payload)
 
                      
      let originalPath = req.file.path
@@ -427,7 +433,17 @@ module.exports = {
              if (err) {
                  console.log(err)
              } else {
-               
+              
+              let payload = {
+                type: "image_added",
+                user: req.user,
+                plant_id:req.body.plant_id,
+                data: result.insertId
+              }
+      
+              let str_payload = JSON.stringify(payload)
+              pubClient.publish(process.env.CHANNEL, str_payload)
+
                  res.end(`Image Uploaded Successfully`)
              }
          });
@@ -476,5 +492,41 @@ module.exports = {
       default:
         break;
     }
+  },
+
+  deleteAction:(req, res)=>{
+    pubClient = req.app.locals.pubClient
+
+    deleteAction_sql = ` DELETE FROM plant_actions WHERE plant_actions.plant_action_id = ? AND plant_actions.user_id = ?`
+
+    db.query(deleteAction_sql,[req.params.plant_action_id,req.user.user_id], (err, result, fields) => {
+      if (err) {
+        console.log(err)
+        rollback(connection, res);
+      } else {
+
+        let payload = {
+          type: "action_deleted",
+          plant_action_id:req.params.plant_action_id,
+          plant_id:req.params.plant_id,
+          data: result.affectedRows
+        }
+
+        let payload2 = {
+          type: "action_taken",
+          plant_action_id:req.params.plant_action_id,
+          plant_id:req.params.plant_id,
+          data: result.affectedRows
+        }
+        
+        let str_payload = JSON.stringify(payload)
+        let str_payload2 = JSON.stringify(payload2)
+        
+        pubClient.publish(process.env.CHANNEL, str_payload)
+        pubClient.publish(process.env.CHANNEL, str_payload2)
+        
+        res.send(result)
+      }
+    })
   }
 }

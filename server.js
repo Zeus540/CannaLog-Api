@@ -17,9 +17,8 @@ const router = require('./routes')
 const db = require('./lib/db');
 require('dotenv').config()
 
-let channel = "SweetLeaf"
 
-const pubClient = createClient({ url: 'redis://95.111.252.42:6379' });
+const pubClient = createClient({ url: 'redis://95.111.252.42:6380' });
 const subClient = pubClient.duplicate();
 
 pubClient.connect()
@@ -51,7 +50,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.json());
 app.use(router)
-app.set('json spaces', 5)
+app.set('json spaces', 2)
 app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
 
@@ -59,33 +58,33 @@ app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerFile))
 io.on('connection', (socket, req) => {
 
 
-	const yourCookieValue = socket.request.headers.cookie
-		?.split(';')
-		?.map(cookie => cookie.trim())
-		?.find(cookie => cookie.startsWith('session'));
+	 const yourCookieValue = socket.request.headers.cookie
+	 	?.split(';')
+	 	?.map(cookie => cookie.trim())
+	 	?.find(cookie => cookie.startsWith('session'));
 
-	let jwt_token = yourCookieValue?.split("=")[1]
-console.log("jwt_token",jwt_token)
-	if (jwt_token !== undefined) {
-		jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
+	 let jwt_token = yourCookieValue?.split("=")[1]
+	 console.log("jwt_token",jwt_token)
+	 if (jwt_token !== undefined) {
+	 	jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
 
-			let sql = `
-		UPDATE users
-		SET is_logged_in = 1
-		WHERE user_id = ?`
-			db.query(sql, [await user?.user_id], (err, result, fields) => {
-				if (err) {
-					console.log(err)
+	 		let sql = `
+	 	UPDATE users
+	 	SET is_logged_in = 1
+	 	WHERE user_id = ?`
+	 		db.query(sql, [await user?.user_id], (err, result, fields) => {
+	 			if (err) {
+	 				console.log(err)
 
-				} else {
-					console.log(user?.user_name, 'connected');
-				}
-			})
-		})
-	}
+	 			} else {
+	 				console.log(user?.user_name, 'connected');
+	 			}
+	 		})
+	 	})
+	 }
 
 	//Redis Subscribe 
-	subClient.subscribe(channel, (payload) => {
+	subClient.subscribe(process.env.CHANNEL, (payload) => {
 
 		payload = JSON.parse(payload)
 
@@ -178,11 +177,11 @@ console.log("jwt_token",jwt_token)
 
 			let note_added_sql = `
 			SELECT plant_note_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
-			WHERE plant_notes.plant_id = ?
-			ORDER BY creation_date DESC
+			WHERE plant_notes.plant_note_id = ?
+
 			`
 		
-			db.query(note_added_sql, [payload.plant_id], (err, result, fields) => {
+			db.query(note_added_sql, [payload.data], (err, result, fields) => {
 			if (err) {
 				console.log(err)
 			} else {
@@ -192,6 +191,31 @@ console.log("jwt_token",jwt_token)
 		
 			break;
 
+			case "image_added":
+
+			let image_added_sql = `
+			SELECT plant_image_id,plant_id,user_id,plant_action_id,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,full_img,full_img_next_gen,DATE_FORMAT(creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date FROM plant_images
+            WHERE plant_images.plant_id = ?
+            ORDER BY creation_date DESC
+			`
+		
+			db.query(image_added_sql, [payload.plant_id], (err, result, fields) => {
+			if (err) {
+				console.log(err)
+			} else {
+				socket.emit(`image_added${payload.plant_id}`, result[0])
+			}
+			})
+		
+			break;
+			
+			case "action_deleted":
+			socket.emit(`action_deleted${payload.plant_id}`, payload)
+			break;
+
+
+
+			
 			default:
 			break;
 		}
@@ -204,31 +228,31 @@ console.log("jwt_token",jwt_token)
 
 	socket.on('disconnect', () => {
 
-		const yourCookieValue = socket.request.headers.cookie
-			?.split(';')
-			?.map(cookie => cookie.trim())
-			?.find(cookie => cookie.startsWith('session'));
+	 	const yourCookieValue = socket.request.headers.cookie
+	 		?.split(';')
+	 		?.map(cookie => cookie.trim())
+	 		?.find(cookie => cookie.startsWith('session'));
 
-	let jwt_token = yourCookieValue?.split("=")[1]
-	console.log("jwt_token",jwt_token)
-		if (jwt_token !== undefined) {
+	 let jwt_token = yourCookieValue?.split("=")[1]
+	 console.log("jwt_token",jwt_token)
+	 	if (jwt_token !== undefined) {
 
-			jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
+	 		jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
 
-				let sql = `
-			UPDATE users
-			SET is_logged_in = 0
-			WHERE user_id = ?`
-				db.query(sql, [await user?.user_id], (err, result, fields) => {
-					if (err) {
-						console.log(err)
+	 			let sql = `
+	 		UPDATE users
+	 		SET is_logged_in = 0
+	 		WHERE user_id = ?`
+	 			db.query(sql, [await user?.user_id], (err, result, fields) => {
+	 				if (err) {
+	 					console.log(err)
 
-					} else {
-						console.log(user?.user_name, 'disconnected');
-					}
-				})
-			})
-		}
+	 				} else {
+	 					console.log(user?.user_name, 'disconnected');
+	 				}
+	 			})
+	 		})
+	 	}
 
 	});
 })

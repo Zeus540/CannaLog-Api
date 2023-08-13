@@ -116,9 +116,8 @@ module.exports = {
     ...
     */
     
-
-    let sql = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    let sql_public = `
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -128,7 +127,7 @@ module.exports = {
     ORDER BY plants.creation_date DESC
     `
 
-    db.query(sql, (err, result, fields) => {
+    db.query(sql_public, (err, result, fields) => {
       if (err) {
         console.log(err)
       } else {
@@ -200,13 +199,12 @@ module.exports = {
       }
     })
   },
-  
   getMyPlants: (req, res) => {
     /* ...
     // #swagger.tags = ['Plants']
     ...
     */
-    let sql = `
+    let getMyPlants_sql = `
     SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
     FROM users
     JOIN plants ON users.user_id = plants.user_id
@@ -217,7 +215,7 @@ module.exports = {
     ORDER BY plants.creation_date DESC
     `
 
-    db.query(sql, [req.user.user_id], (err, result, fields) => {
+    db.query(getMyPlants_sql, [req.user.user_id], (err, result, fields) => {
       if (err) {
         console.log(err)
       } else {
@@ -259,10 +257,10 @@ module.exports = {
       ...
       */
 
-      let sql = `
+      let delete_sql = `
       DELETE FROM plants WHERE plants.plant_id = ? AND plants.user_id = ?
       `
-    db.query(sql, [req.params.plant_id, req.user.user_id], (err, result, fields) => {
+    db.query(delete_sql, [req.params.plant_id, req.user.user_id], (err, result, fields) => {
       if (err) {
         console.log(err)
       } else {
@@ -275,7 +273,7 @@ module.exports = {
       // #swagger.tags = ['Plants']
       ...
       */
-      let sql = `
+      let current_stage_sql = `
       SELECT DATE_FORMAT(plant_stages.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,plant_stages.last_updated,plant_stages.plant_action_id,plant_stages.plant_id,plant_stages.plant_stage,plant_stages.plant_stage_id,plant_stages.user_id,stages.stage_name,stages.stage_color
       FROM plant_stages
       JOIN stages ON stages.stage_id = plant_stages.plant_stage
@@ -283,7 +281,7 @@ module.exports = {
       ORDER BY creation_date DESC
       LIMIT 1
       `
-    db.query(sql, [req.body.plant_id], (err, result, fields) => {
+    db.query(current_stage_sql, [req.body.plant_id], (err, result, fields) => {
       if (err) {
         console.log(err)
       } else {
@@ -310,7 +308,6 @@ module.exports = {
       }
     })
   },
-
   update_cover_image: (req, res) => {
     /* ...
       // #swagger.tags = ['Plants']
@@ -332,6 +329,5 @@ console.log("req.body.cover_thumbnail",req.body.cover_thumbnail)
       }
     })
   }
-
 }
 

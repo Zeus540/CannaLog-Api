@@ -1,5 +1,6 @@
 const db = require('../../lib/db')
-let channel = "SweetLeaf"
+require('dotenv').config()
+
 
 
 
@@ -10,14 +11,14 @@ module.exports = {
       ...
       */
 
-    let sql = `
+    let get_environment_sql = `
     SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
     FROM environment_types
     JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
     WHERE environments.user_id = ?
     `
 
-    db.query(sql, [req.user.user_id], (err, result, fields) => {
+    db.query(get_environment_sql, [req.user.user_id], (err, result, fields) => {
       if (err) {
         console.log(err)
 
@@ -65,7 +66,7 @@ module.exports = {
         }
 
         let str_payload = JSON.stringify(payload)
-        pubClient.publish(channel, str_payload)
+        pubClient.publish(process.env.CHANNEL, str_payload)
   
         res.send(result)
 
@@ -117,7 +118,7 @@ module.exports = {
         }
     
         let str_payload = JSON.stringify(payload)
-        pubClient.publish(channel, str_payload)
+        pubClient.publish(process.env.CHANNEL, str_payload)
 
         res.send(result)
 
@@ -148,7 +149,7 @@ module.exports = {
         }
       
         let str_payload = JSON.stringify(payload)
-        pubClient.publish(channel, str_payload)
+        pubClient.publish(process.env.CHANNEL, str_payload)
         res.send(result)
         }
       

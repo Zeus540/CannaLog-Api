@@ -6,6 +6,7 @@ const register = require("./register")
 const plants = require("./plants")
 const environments = require("./environments")
 const irrigation_types = require("./irrigation_types")
+const nutrients = require("./nutrients")
 const growers = require("./growers")
 const notes = require("./notes")
 
@@ -23,6 +24,7 @@ router.use("/register", register);
 router.use("/plants", plants);
 router.use("/environments", environments);
 router.use("/irrigation_types", irrigation_types);
+router.use("/nutrients", nutrients);
 router.use("/growers", growers);
 router.use("/notes", notes);
 router.use("/logout", logout);

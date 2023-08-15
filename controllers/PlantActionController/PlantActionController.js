@@ -209,6 +209,41 @@ module.exports = {
     
             break;
 
+            case "1":
+              sql = `
+              SELECT 
+              plant_feeding.plant_feeding_id,
+              plant_feeding.plant_id,
+              plant_feeding.user_id,
+              plant_feeding.plant_action_id,
+              plant_feeding.water_amount,
+              plant_feeding.water_amount_measurement,
+              plant_feeding.nutrient_amount,
+              plant_feeding.nutrient_measurement,
+              DATE_FORMAT(plant_feeding.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,
+              nutrient_options.nutrient_name,
+              mu_water.measurement_unit as water_measurement_unit,
+              mu_nutrient.measurement_unit as nutrient_measurement_unit
+            FROM 
+                nutrient_options 
+            JOIN 
+                plant_feeding ON plant_feeding.nutrient_id = nutrient_options.nutrient_id 
+            JOIN 
+                measurement_units mu_water ON plant_feeding.water_amount_measurement = mu_water.measurement_unit_id
+            JOIN 
+                measurement_units mu_nutrient ON plant_feeding.nutrient_measurement = mu_nutrient.measurement_unit_id
+            WHERE 
+                plant_feeding.plant_id = ?;
+              `
+              db.query(sql, [req.body.plant_id], (err, result, fields) => {
+                if (err) {
+                  console.log(err)
+                } else {
+                  res.send(result)
+                }
+              })
+      
+              break;
       default:
         break;
     }
@@ -373,18 +408,7 @@ module.exports = {
 
       case 4:
  
-      console.log("req.body",req.body.creation_date)
-      console.log("utcTimestamp",utcTimestamp)
-      //let payload = {
-        //           type: "note_added",
-        //           user: req.user,
-        //           plant_id:req.body.plant_id,
-        //           data: result.insertId
-        //         }
-        
-        //         let str_payload = JSON.stringify(payload)
-        //         pubClient.publish(process.env.CHANNEL, str_payload)
-
+   
         function insert_action_image(req, res, connection) {
             sql = `INSERT INTO plant_actions (plant_id, user_id, plant_action_type_id, creation_date) VALUES (${req.body.plant_id},${req.user.user_id},${parseInt(req.params.type)},'${utcTimestamp}')`
   
@@ -489,8 +513,126 @@ module.exports = {
         
       break;
 
-      default:
-        break;
+      case 1:
+        function insert_feeding_action(req, res, connection, prev_result) {
+        
+
+          let list = req.body.nutrient_list
+          let nutrient_check = list.length > 0
+        
+          if(nutrient_check){
+         
+            for (let index = 0; index < list.length; index++) {
+              const element = list[index];
+              
+              insert_feeding_action_multi_sql = `
+              INSERT INTO plant_feeding (plant_action_id, user_id,plant_id,water_amount,water_amount_measurement,nutrient_id,nutrient_amount,nutrient_measurement, creation_date,last_updated) 
+              VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},"${req.body.water_amount}",${req.body.water_amount_measurement},${element.nutrient_id},${element.nutrient_amount},${element.nutrient_measurement}, '${utcTimestamp}','${utcTimestamp}')`
+
+              
+            db.query(insert_feeding_action_multi_sql, (err, result, fields) => {
+              if (err) {
+                console.log(err)
+                rollback(connection, res);
+              } else {
+                if(index == list.length - 1){
+                // let payload = {
+                //   type: "note_added",
+                //   user: req.user,
+                //   plant_id:req.body.plant_id,
+                //   data: result.insertId
+                // }
+        
+                // let str_payload = JSON.stringify(payload)
+                // pubClient.publish(process.env.CHANNEL, str_payload)
+
+             
+                  res.send(result)
+                }
+              }
+            })
+
+            }
+          }else{
+            console.log("insert_feeding_action",nutrient_check)
+            insert_feeding_action_sql = `
+            INSERT INTO plant_feeding (plant_action_id, user_id,plant_id,water_amount,water_amount_measurement, creation_date,last_updated) 
+            VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},"${req.body.water_amount}",${req.body.water_amount_measurement},'${utcTimestamp}','${utcTimestamp}')`
+
+            db.query(insert_feeding_action_sql, (err, result, fields) => {
+              if (err) {
+                console.log(err)
+                rollback(connection, res);
+              } else {
+                
+                // let payload = {
+                //   type: "note_added",
+                //   user: req.user,
+                //   plant_id:req.body.plant_id,
+                //   data: result.insertId
+                // }
+        
+                // let str_payload = JSON.stringify(payload)
+                // pubClient.publish(process.env.CHANNEL, str_payload)
+
+             
+                  res.send(result)
+            
+              }
+            })
+          }
+          
+     
+  
+        }
+        function insert_action_feeding(req, res, connection) {
+            sql = `INSERT INTO plant_actions (plant_id, user_id, plant_action_type_id, creation_date) VALUES (${req.body.plant_id},${req.user.user_id},${req.body.plant_action_type_id},'${utcTimestamp}')`
+  
+            db.query(sql, (err, result, fields) => {
+              if (err) {
+                console.log(err)
+                rollback(connection, res);
+              } else {
+
+                let payload = {
+                  type: "action_taken",
+                  user: req.user,
+                  plant_id:req.body.plant_id,
+                  data: result.insertId
+                }
+        
+                let str_payload = JSON.stringify(payload)
+                pubClient.publish(process.env.CHANNEL, str_payload)
+
+                insert_feeding_action(req, res, connection, result)
+              }
+            })
+  
+        }
+        // Acquire a connection from the pool
+        db.getConnection((error, connection) => {
+            if (error) {
+              console.error('Error acquiring connection from the pool: ', error);
+              res.status(500).json({ error: 'Internal server error' });
+              return;
+            }
+            // Start the transaction
+            connection.beginTransaction((error) => {
+              if (error) {
+                console.error('Error starting the transaction: ', error);
+                releaseConnectionAndRespond(connection, res, 500, 'Internal server error');
+                return;
+              }
+  
+              // Perform queries within the transaction
+              insert_action_feeding(req, res, connection);
+  
+            });
+  
+        });
+      break;
+
+    
     }
   },
 

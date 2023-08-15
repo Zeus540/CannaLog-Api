@@ -20,5 +20,23 @@ module.exports = {
               }
             })
         },
+        get_measurement_units:(req,res) => {
+          /* ...
+          // #swagger.tags = ['Nutrients']
+          ...
+          */
+                let sql = `
+                SELECT * FROM measurement_units ORDER BY measurement_units.measurement_unit_id
+                `
+        
+                db.query(sql, (err, result, fields) => {
+                  if (err) {
+                    console.log(err)
+                  } else {
+                    res.send(result)
+                  }
+                })
+            },
 
 }
+

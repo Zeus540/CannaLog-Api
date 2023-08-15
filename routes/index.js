@@ -8,6 +8,7 @@ const environments = require("./environments")
 const irrigation_types = require("./irrigation_types")
 const nutrients = require("./nutrients")
 const growers = require("./growers")
+const measurement_units = require("./measurement_units")
 const notes = require("./notes")
 
 
@@ -29,5 +30,5 @@ router.use("/growers", growers);
 router.use("/notes", notes);
 router.use("/logout", logout);
 router.use("/verify", verify);
-
+router.use("/measurement_units", measurement_units);
 module.exports = router

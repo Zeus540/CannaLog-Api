@@ -1,14 +1,9 @@
 const db = require('../../lib/db')
 const { formatToTimeZone } = require('date-fns-timezone');
-const { zonedTimeToUtc, format } = require('date-fns-tz');
 const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper');
 
-const localDate = new Date('2023-08-01 08:52:36');
-const utcDate = zonedTimeToUtc(localDate, 'Etc/UTC');
-const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
-
-console.log("time utcTimestamp",utcTimestamp)
-
+const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+console.log("timeZone",timeZone)
   // Query 1
   function insert_plant(req,res,connection) {
 
@@ -19,10 +14,13 @@ console.log("time utcTimestamp",utcTimestamp)
     let irrigation_type = req.body.irrigation
     let public = req.body.public
 
-   
-    const utcTimestamp = formatToTimeZone(new Date(creation_date), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'UTC' });
+ 
+    const utcTimestamp = formatToTimeZone(new Date(creation_date), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'Etc/UTC' });
     console.log("time sub",req.body.creation_date)
     console.log("time utcTimestamp",utcTimestamp)
+  
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+console.log("timeZone",timeZone)
     
     let values = {
       plant_name:`"${plant_name}"`,

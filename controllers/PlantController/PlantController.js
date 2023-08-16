@@ -3,6 +3,10 @@ const { formatToTimeZone } = require('date-fns-timezone');
 const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper');
 
 
+const utcTimestamp = formatToTimeZone(new Date("2023-08-01 08:58:18"), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'UTC' });
+
+console.log("time utcTimestamp",utcTimestamp)
+
   // Query 1
   function insert_plant(req,res,connection) {
 

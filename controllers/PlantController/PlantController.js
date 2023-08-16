@@ -1,21 +1,23 @@
 const db = require('../../lib/db')
 const { formatToTimeZone } = require('date-fns-timezone');
 const { parse, format } = require('date-fns');
-const { utcToZonedTime } = require('date-fns-tz');
 const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper');
 
 
+// User-submitted date and time
+const userDateString = '2023-08-01 08:58:18';
 
-const inputDateString = '2023-08-01 09:20:18';
-const inputDate = parse(inputDateString, 'yyyy-MM-dd HH:mm:ss', new Date());
+// Parse the user-submitted date string
+const userDate = parse(userDateString, 'yyyy-MM-dd HH:mm:ss', new Date());
 
-// Convert the input date to UTC
-const utcDate = utcToZonedTime(inputDate, 'Etc/UTC');
+// Convert the user's local date to UTC
+const utcDate = new Date(Date.UTC(userDate.getFullYear(), userDate.getMonth(), userDate.getDate(), userDate.getHours(), userDate.getMinutes(), userDate.getSeconds()));
 
 // Format the UTC date as a string
-const utcDateString = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
+const formattedUTCDate = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
 
-console.log('UTC Date String:', utcDateString);
+console.log('User Date:', userDateString);
+console.log('Formatted UTC Date:', formattedUTCDate);
 
   // Query 1
   function insert_plant(req,res,connection) {

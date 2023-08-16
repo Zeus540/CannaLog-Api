@@ -14,7 +14,7 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
     let public = req.body.public
 
    
-    const utcTimestamp = formatToTimeZone(new Date(creation_date), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'Etc/UTC' });
+    const utcTimestamp = formatToTimeZone(new Date(creation_date), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'UTC' });
     console.log("time sub",req.body.creation_date)
     console.log("time utcTimestamp",utcTimestamp)
     

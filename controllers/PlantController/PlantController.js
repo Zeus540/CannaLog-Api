@@ -58,7 +58,7 @@ const { parse } = require('date-fns');
   // Query 2
   function insert_plant_action(connection,req,res,prev_results,utcTimestamp) {
 
-      let sql = `INSERT INTO plant_actions (plant_id,user_id,plant_action_type_id,creation_date,last_updated) VALUES (${prev_results.insertId},${req.user.user_id},14,'${utcTimestamp}','${utcTimestamp}')`
+      let sql = `INSERT INTO plant_actions (plant_id,user_id,plant_action_type_id,creation_date) VALUES (${prev_results.insertId},${req.user.user_id},14,'${utcTimestamp}')`
   
       db.query(sql, (error, results) => {
         if (error) {

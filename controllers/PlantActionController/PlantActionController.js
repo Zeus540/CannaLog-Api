@@ -1,6 +1,9 @@
 const db = require('../../lib/db')
 const { formatToTimeZone } = require('date-fns-timezone');
 const { rollback, commit, releaseConnectionAndRespond } = require('../../lib/db_helper')
+const { zonedTimeToUtc, format } = require('date-fns-tz');
+const { parse } = require('date-fns');
+
 require('dotenv').config()
 
 var Minio = require("minio");
@@ -253,7 +256,18 @@ module.exports = {
   takeAction: (req, res) => {
  
     pubClient = req.app.locals.pubClient
-    const utcTimestamp = formatToTimeZone(new Date(req.body.creation_date), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'Etc/UTC' });
+
+    let time_zone = req.body.time_zone
+      // Parse the user-submitted date string in the user's timezone
+      
+      const userDate = parse(req.body.creation_date, 'yyyy-MM-dd HH:mm:ss', new Date(), { timeZone: time_zone });
+
+      // Convert the user's local date to UTC
+      const utcDate  = zonedTimeToUtc(userDate, time_zone);
+  
+      // Format the UTC date as a string
+      const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
+  
 
     switch (parseInt(req.params.type)) {
 
@@ -278,9 +292,8 @@ module.exports = {
       
               let str_payload = JSON.stringify(payload)
               pubClient.publish(process.env.CHANNEL, str_payload)
-
-              
-              res.send(result)
+              commit(connection,res, prev_results, result);
+            
             }
           })
 
@@ -353,8 +366,8 @@ module.exports = {
         
                 let str_payload = JSON.stringify(payload)
                 pubClient.publish(process.env.CHANNEL, str_payload)
-
-                res.send(result)
+                commit(connection,res, 200, result);
+              
               }
             })
   

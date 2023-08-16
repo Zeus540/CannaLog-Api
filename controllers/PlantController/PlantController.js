@@ -4,8 +4,20 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
 const { zonedTimeToUtc, format } = require('date-fns-tz');
 const { parse } = require('date-fns');
 
+  let creation_date = '2023-08-01 09:53:10'
+  let time_zone = 'Africa/Johannesburg'
+  let loc = 'UTC';
+    // Parse the user-submitted date string in the user's timezone
+    const userDate = parse(creation_date, 'yyyy-MM-dd HH:mm:ss', new Date());
+
+    // Convert the user's local date to UTC
+    const utcDate  = zonedTimeToUtc(userDate, loc);
+
+    // Format the UTC date as a string
+    const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
 
 
+    console.log("utcTimestamp",utcTimestamp)
 
   // Query 1
   function insert_plant(req,res,connection) {
@@ -27,10 +39,7 @@ const { parse } = require('date-fns');
     // Format the UTC date as a string
     const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
 
-    console.log("time sub",req.body.creation_date)
-    console.log("time utcTimestamp",utcTimestamp)
-    console.log("time_zone",time_zone)
-    
+
     let values = {
       plant_name:`"${plant_name}"`,
       plant_strain,
@@ -38,7 +47,7 @@ const { parse } = require('date-fns');
       irrigation_type,
       public,
       user_id:req.user.user_id,
-      creation_date: `"${utcTimestamp}"`
+      creation_date: `'${utcTimestamp}'`
     }
 
     let sql = `INSERT INTO plants (${Object.keys(values)}) VALUES (${Object.values(values)})`

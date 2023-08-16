@@ -102,7 +102,7 @@ io.on('connection', (socket, req) => {
 						console.log(err)
 
 					} else {
-						socket.emit(`environment_added${payload.user.user_id}`, result[0])
+						io.emit(`environment_added${payload.user.user_id}`, result[0])
 
 					}
 				})
@@ -123,7 +123,7 @@ io.on('connection', (socket, req) => {
 
 					} else {
 						console.log(err, result[0])
-						socket.emit(`environment_edited${payload.user.user_id}`, result[0])
+						io.emit(`environment_edited${payload.user.user_id}`, result[0])
 
 					}
 				})

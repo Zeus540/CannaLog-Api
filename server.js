@@ -29,9 +29,9 @@ const io = new Server(server, {
 		origin: true,
 		credentials: true
 	},
-	cookie: {
-		httpOnly: true // Enable HTTP-only cookies
-	}
+	// cookie: {
+	// 	httpOnly: true // Enable HTTP-only cookies
+	// }
 });
 
 io.adapter(createAdapter(pubClient, subClient));
@@ -64,7 +64,7 @@ io.on('connection', (socket, req) => {
 	 	?.find(cookie => cookie.startsWith('session'));
 
 	 let jwt_token = yourCookieValue?.split("=")[1]
-	 console.log("jwt_token",jwt_token)
+	 
 	 if (jwt_token !== undefined) {
 	 	jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
 
@@ -234,7 +234,7 @@ io.on('connection', (socket, req) => {
 	 		?.find(cookie => cookie.startsWith('session'));
 
 	 let jwt_token = yourCookieValue?.split("=")[1]
-	 console.log("jwt_token",jwt_token)
+	 
 	 	if (jwt_token !== undefined) {
 
 	 		jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {

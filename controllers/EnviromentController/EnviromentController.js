@@ -116,7 +116,7 @@ module.exports = {
           user: req.user,
           data: parseInt(req.params.environment_id)
         }
-    
+       
         let str_payload = JSON.stringify(payload)
         pubClient.publish(process.env.CHANNEL, str_payload)
 

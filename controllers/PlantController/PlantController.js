@@ -1,41 +1,35 @@
 const db = require('../../lib/db')
 const { formatToTimeZone } = require('date-fns-timezone');
-const { parse, format } = require('date-fns');
 const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper');
+const { zonedTimeToUtc, format } = require('date-fns-tz');
+const { parse } = require('date-fns');
 
 
-// User-submitted date and time
-const userDateString = '2023-08-01 08:58:18';
 
-// Parse the user-submitted date string
-const userDate = parse(userDateString, 'yyyy-MM-dd HH:mm:ss', new Date());
-
-// Convert the user's local date to UTC
-const utcDate = new Date(Date.UTC(userDate.getFullYear(), userDate.getMonth(), userDate.getDate(), userDate.getHours(), userDate.getMinutes(), userDate.getSeconds()));
-
-// Format the UTC date as a string
-const formattedUTCDate = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
-
-console.log('User Date:', userDateString);
-console.log('Formatted UTC Date:', formattedUTCDate);
 
   // Query 1
   function insert_plant(req,res,connection) {
 
     let creation_date = req.body.creation_date
+    let time_zone = req.body.timezone
     let plant_name = req.body.name
     let plant_strain = req.body.strain
     let environment_id = req.body.environment
     let irrigation_type = req.body.irrigation
     let public = req.body.public
 
- 
-    const utcTimestamp = formatToTimeZone(new Date(creation_date), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'Etc/UTC' });
+    // Parse the user-submitted date string in the user's timezone
+    const userDate = parse(creation_date, 'yyyy-MM-dd HH:mm:ss', new Date(), { timeZone: time_zone });
+
+    // Convert the user's local date to UTC
+    const utcDate  = zonedTimeToUtc(userDate, time_zone);
+
+    // Format the UTC date as a string
+    const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
+
     console.log("time sub",req.body.creation_date)
     console.log("time utcTimestamp",utcTimestamp)
-  
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-console.log("timeZone",timeZone)
+    console.log("time_zone",time_zone)
     
     let values = {
       plant_name:`"${plant_name}"`,

@@ -1,9 +1,12 @@
 const db = require('../../lib/db')
 const { formatToTimeZone } = require('date-fns-timezone');
+const { zonedTimeToUtc, format } = require('date-fns-tz');
 const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper');
 
+const localDate = new Date('2023-08-01 09:52:36');
 
-const utcTimestamp = formatToTimeZone(new Date("2023-08-01 08:58:18"), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'UTC' });
+const utcDate = zonedTimeToUtc(localDate);
+const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
 
 console.log("time utcTimestamp",utcTimestamp)
 

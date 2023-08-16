@@ -13,8 +13,11 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
     let irrigation_type = req.body.irrigation
     let public = req.body.public
 
+   
     const utcTimestamp = formatToTimeZone(new Date(creation_date), 'YYYY-MM-DD HH:mm:ss', { timeZone: 'Etc/UTC' });
-
+    console.log("time sub",req.body.creation_date)
+    console.log("time utcTimestamp",utcTimestamp)
+    
     let values = {
       plant_name:`"${plant_name}"`,
       plant_strain,

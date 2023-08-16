@@ -196,7 +196,7 @@ io.on('connection', (socket, req) => {
 			let image_added_sql = `
 			SELECT plant_image_id,plant_id,user_id,plant_action_id,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,full_img,full_img_next_gen,DATE_FORMAT(creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date FROM plant_images
             WHERE plant_images.plant_id = ?
-            ORDER BY creation_date DESC
+           
 			`
 		
 			db.query(image_added_sql, [payload.plant_id], (err, result, fields) => {

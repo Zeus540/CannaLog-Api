@@ -211,7 +211,7 @@ module.exports = {
         })
 
         break;
-
+    
       case "1":
         sql = `
         SELECT 
@@ -220,15 +220,18 @@ module.exports = {
         plant_feeding.user_id,
         plant_feeding.plant_action_id,
         plant_feeding.nutrient_amount,
-        plant_feeding.nutrient_measurement,
-        DATE_FORMAT(plant_feeding.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,
-        nutrient_options.nutrient_name
-      FROM 
-          nutrient_options 
-      JOIN 
-          plant_feeding ON plant_feeding.nutrient_id = nutrient_options.nutrient_id 
-      WHERE 
-          plant_feeding.plant_id = ?;
+        DATE_FORMAT(plant_feeding.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,
+        nutrient_options.nutrient_name,
+        measurement_units.measurement_unit_id,
+        measurement_units.measurement_unit
+    FROM 
+        nutrient_options
+    JOIN
+        plant_feeding ON plant_feeding.nutrient_id = nutrient_options.nutrient_id
+    JOIN
+        measurement_units ON plant_feeding.nutrient_measurement = measurement_units.measurement_unit_id
+    WHERE 
+        plant_feeding.plant_id = ?;
               `
         db.query(sql, [req.body.plant_id], (err, result, fields) => {
           if (err) {

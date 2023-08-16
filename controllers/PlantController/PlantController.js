@@ -18,16 +18,14 @@ const { parse } = require('date-fns');
     let irrigation_type = req.body.irrigation
     let public = req.body.public
 
-    let loc = 'UTC';
     // Parse the user-submitted date string in the user's timezone
-    const userDate = parse(creation_date, 'yyyy-MM-dd HH:mm:ss', new Date());
+    const userDate = parse(creation_date, 'yyyy-MM-dd HH:mm:ss', new Date(), { timeZone: time_zone });
 
     // Convert the user's local date to UTC
-    const utcDate  = zonedTimeToUtc(userDate, loc);
+    const utcDate  = zonedTimeToUtc(userDate, time_zone);
 
     // Format the UTC date as a string
     const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
-
 
 
     let values = {

@@ -4,20 +4,8 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
 const { zonedTimeToUtc, format } = require('date-fns-tz');
 const { parse } = require('date-fns');
 
-  let creation_date = '2023-08-01 09:53:10'
-  let time_zone = 'Africa/Johannesburg'
-  let loc = 'UTC';
-    // Parse the user-submitted date string in the user's timezone
-    const userDate = parse(creation_date, 'yyyy-MM-dd HH:mm:ss', new Date());
-
-    // Convert the user's local date to UTC
-    const utcDate  = zonedTimeToUtc(userDate, loc);
-
-    // Format the UTC date as a string
-    const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
 
 
-    console.log("utcTimestamp",utcTimestamp)
 
   // Query 1
   function insert_plant(req,res,connection) {
@@ -30,14 +18,16 @@ const { parse } = require('date-fns');
     let irrigation_type = req.body.irrigation
     let public = req.body.public
 
+    let loc = 'UTC';
     // Parse the user-submitted date string in the user's timezone
-    const userDate = parse(creation_date, 'yyyy-MM-dd HH:mm:ss', new Date(), { timeZone: time_zone });
+    const userDate = parse(creation_date, 'yyyy-MM-dd HH:mm:ss', new Date());
 
     // Convert the user's local date to UTC
-    const utcDate  = zonedTimeToUtc(userDate, time_zone);
+    const utcDate  = zonedTimeToUtc(userDate, loc);
 
     // Format the UTC date as a string
     const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
+
 
 
     let values = {

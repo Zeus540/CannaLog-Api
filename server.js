@@ -54,6 +54,7 @@ app.set('json spaces', 2)
 app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
 
+
 //Websocket Connections
 io.on('connection', (socket, req) => {
 
@@ -83,148 +84,6 @@ io.on('connection', (socket, req) => {
 	 	})
 	 }
 
-	//Redis Subscribe 
-	subClient.subscribe(process.env.CHANNEL, (payload) => {
-
-		payload = JSON.parse(payload)
-
-		switch (payload.type) {
-			case "add_environment":
-
-			let sql = `
-			SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
-			FROM environment_types
-			JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
-			WHERE environments.environment_id = ?
-			`
-				db.query(sql, [payload.data], (err, result, fields) => {
-					if (err) {
-						console.log(err)
-
-					} else {
-						socket.emit(`environment_added${payload.user.user_id}`, result[0])
-
-					}
-				})
-
-				break;
-
-			case "environment_edited":
-				console.log('environment_edited')
-				let sql_edited = `
-				SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
-				FROM environment_types
-				JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
-				WHERE environments.environment_id = ?
-				`
-				db.query(sql_edited, [payload.data], (err, result, fields) => {
-					if (err) {
-						console.log(err)
-
-					} else {
-						console.log(err, result[0])
-						socket.emit(`environment_edited${payload.user.user_id}`, result[0])
-
-					}
-				})
-
-				break;
-
-			case "environment_deleted":
-			socket.emit(`environment_deleted${payload.user.user_id}`, payload.id)
-			break;
-			
-			case "action_taken":
-
-					let action_taken_sql = `
-					SELECT plant_action_types.plant_action_type_name, plant_actions.plant_action_id,plant_actions.plant_id,DATE_FORMAT(plant_actions.creation_date, "%Y-%m-%dT%H:%i:%sZ") creation_date,plant_actions.plant_action_type_id
-					FROM plant_action_types
-					JOIN plant_actions ON plant_action_types.plant_action_type_id = plant_actions.plant_action_type_id
-				
-					WHERE plant_actions.plant_id = ?
-					ORDER BY plant_actions.creation_date DESC
-						`
-				
-					db.query(action_taken_sql, [payload.plant_id], (err, result, fields) => {
-					if (err) {
-						console.log(err)
-					} else {
-						socket.emit(`action_taken${payload.plant_id}`, result)
-					}
-					})
-			break;
-			
-			case "stage_changed":
-
-				let stage_changed_sql = `
-				SELECT plant_stages.plant_stage,plant_stages.user_id, plant_stages.plant_id,plant_stages.plant_stage_id,stages.stage_name,plant_stages.plant_action_id,DATE_FORMAT(plant_stages.creation_date, "%Y-%m-%dT%H:%i:%sZ")as creation_date,stages.stage_color
-				FROM plant_stages
-				JOIN stages ON plant_stage = stages.stage_id
-				WHERE plant_stages.plant_id = ?
-				ORDER BY creation_date DESC
-				`
-			
-				db.query(stage_changed_sql, [payload.plant_id], (err, result, fields) => {
-				if (err) {
-					console.log(err)
-				} else {
-					socket.emit(`stage_changed${payload.plant_id}`, result[0])
-				}
-				})
-			break;
-				
-			case "note_added":
-
-			let note_added_sql = `
-			SELECT plant_note_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
-			WHERE plant_notes.plant_note_id = ?
-
-			`
-		
-			db.query(note_added_sql, [payload.data], (err, result, fields) => {
-			if (err) {
-				console.log(err)
-			} else {
-				socket.emit(`note_added${payload.plant_id}`, result[0])
-			}
-			})
-		
-			break;
-
-			case "image_added":
-
-			let image_added_sql = `
-			SELECT plant_image_id,plant_id,user_id,plant_action_id,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,full_img,full_img_next_gen,DATE_FORMAT(creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date FROM plant_images
-            WHERE plant_images.plant_image_id = ?
-           
-			`
-		
-			db.query(image_added_sql, [payload.data], (err, result, fields) => {
-			if (err) {
-				console.log(err)
-			} else {
-				socket.emit(`image_added${payload.plant_id}`, result[0])
-			}
-			})
-		
-			break;
-			
-			case "action_deleted":
-			socket.emit(`action_deleted${payload.plant_id}`, payload)
-			break;
-
-
-
-			
-			default:
-			break;
-		}
-
-	})
-
-	subClient.on("error", (err) => {
-		console.log(err);
-	});
 
 	socket.on('disconnect', () => {
 
@@ -256,6 +115,151 @@ io.on('connection', (socket, req) => {
 
 	});
 })
+
+	//Redis Subscribe 
+	subClient.subscribe(process.env.CHANNEL, (payload) => {
+		
+		payload = JSON.parse(payload)
+
+		switch (payload.type) {
+			case "add_environment":
+
+			let sql = `
+			SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
+			FROM environment_types
+			JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
+			WHERE environments.environment_id = ?
+			`
+				db.query(sql, [payload.data], (err, result, fields) => {
+					if (err) {
+						console.log(err)
+
+					} else {
+						io.emit(`environment_added${payload.user.user_id}`, result[0])
+						console.log('environment_added')
+					}
+				})
+
+				break;
+
+			case "environment_edited":
+				
+				let sql_edited = `
+				SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
+				FROM environment_types
+				JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
+				WHERE environments.environment_id = ?
+				`
+				db.query(sql_edited, [payload.data], (err, result, fields) => {
+					if (err) {
+						console.log(err)
+
+					} else {
+						console.log(err, result[0])
+						io.emit(`environment_edited${payload.user.user_id}`, result[0])
+						console.log('environment_edited')
+					}
+				})
+
+				break;
+
+			case "environment_deleted":
+			io.emit(`environment_deleted${payload.user.user_id}`, payload.id)
+			console.log('environment_deleted')
+			break;
+			
+			case "action_taken":
+
+					let action_taken_sql = `
+					SELECT plant_action_types.plant_action_type_name, plant_actions.plant_action_id,plant_actions.plant_id,DATE_FORMAT(plant_actions.creation_date, "%Y-%m-%dT%H:%i:%sZ") creation_date,plant_actions.plant_action_type_id
+					FROM plant_action_types
+					JOIN plant_actions ON plant_action_types.plant_action_type_id = plant_actions.plant_action_type_id
+				
+					WHERE plant_actions.plant_id = ?
+					ORDER BY plant_actions.creation_date DESC
+						`
+				
+					db.query(action_taken_sql, [payload.plant_id], (err, result, fields) => {
+					if (err) {
+						console.log(err)
+					} else {
+						io.emit(`action_taken${payload.plant_id}`, result)
+					
+					}
+					})
+			break;
+			
+			case "stage_changed":
+
+				let stage_changed_sql = `
+				SELECT plant_stages.plant_stage,plant_stages.user_id, plant_stages.plant_id,plant_stages.plant_stage_id,stages.stage_name,plant_stages.plant_action_id,DATE_FORMAT(plant_stages.creation_date, "%Y-%m-%dT%H:%i:%sZ")as creation_date,stages.stage_color
+				FROM plant_stages
+				JOIN stages ON plant_stage = stages.stage_id
+				WHERE plant_stages.plant_id = ?
+				ORDER BY creation_date DESC
+				`
+			
+				db.query(stage_changed_sql, [payload.plant_id], (err, result, fields) => {
+				if (err) {
+					console.log(err)
+				} else {
+					io.emit(`stage_changed${payload.plant_id}`, result[0])
+				}
+				})
+			break;
+				
+			case "note_added":
+
+			let note_added_sql = `
+			SELECT plant_note_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
+			WHERE plant_notes.plant_note_id = ?
+
+			`
+		
+			db.query(note_added_sql, [payload.data], (err, result, fields) => {
+			if (err) {
+				console.log(err)
+			} else {
+				io.emit(`note_added${payload.plant_id}`, result[0])
+			}
+			})
+		
+			break;
+
+			case "image_added":
+
+			let image_added_sql = `
+			SELECT plant_image_id,plant_id,user_id,plant_action_id,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,full_img,full_img_next_gen,DATE_FORMAT(creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date FROM plant_images
+            WHERE plant_images.plant_image_id = ?
+           
+			`
+		
+			db.query(image_added_sql, [payload.data], (err, result, fields) => {
+			if (err) {
+				console.log(err)
+			} else {
+				io.emit(`image_added${payload.plant_id}`, result[0])
+			}
+			})
+		
+			break;
+			
+			case "action_deleted":
+			io.emit(`action_deleted${payload.plant_id}`, payload)
+			break;
+
+
+
+			
+			default:
+			break;
+		}
+
+	})
+
+	subClient.on("error", (err) => {
+		console.log(err);
+	});
 
 
 server.listen(10000, () => { console.log('App listening on port 10000') })

@@ -65,7 +65,7 @@ function authenticateToken(req, res, next) {
               secure: true,
               httpOnly: false ,
               domain:".cannalog.co.za",
-              expires: dayjs().add(30, "seconds").toDate(),
+              expires: dayjs().add(7, "days").toDate(),
             });
             
 

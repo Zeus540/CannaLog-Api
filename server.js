@@ -40,7 +40,7 @@ io.adapter(createAdapter(pubClient, subClient));
 instrument(io, {
 	auth: false
   });
-  
+
 app.locals.pubClient = pubClient
 
 const corsConfig = {
@@ -140,7 +140,7 @@ io.on('connection', (socket, req) => {
 						console.log(err)
 
 					} else {
-						io.emit(`environment_added${payload.user.user_id}`, result[0])
+						io.local.emit(`environment_added${payload.user.user_id}`, result[0])
 						console.log('environment_added')
 					}
 				})
@@ -161,7 +161,7 @@ io.on('connection', (socket, req) => {
 
 					} else {
 						console.log(err, result[0])
-						io.emit(`environment_edited${payload.user.user_id}`, result[0])
+						io.local.emit(`environment_edited${payload.user.user_id}`, result[0])
 						console.log('environment_edited')
 					}
 				})
@@ -169,7 +169,7 @@ io.on('connection', (socket, req) => {
 				break;
 
 			case "environment_deleted":
-			io.emit(`environment_deleted${payload.user.user_id}`, payload.id)
+			io.local.emit(`environment_deleted${payload.user.user_id}`, payload.id)
 			console.log('environment_deleted')
 			break;
 			
@@ -188,7 +188,7 @@ io.on('connection', (socket, req) => {
 					if (err) {
 						console.log(err)
 					} else {
-						io.emit(`action_taken${payload.plant_id}`, result)
+						io.local.emit(`action_taken${payload.plant_id}`, result)
 					
 					}
 					})
@@ -208,7 +208,7 @@ io.on('connection', (socket, req) => {
 				if (err) {
 					console.log(err)
 				} else {
-					io.emit(`stage_changed${payload.plant_id}`, result[0])
+					io.local.emit(`stage_changed${payload.plant_id}`, result[0])
 				}
 				})
 			break;
@@ -225,7 +225,7 @@ io.on('connection', (socket, req) => {
 			if (err) {
 				console.log(err)
 			} else {
-				io.emit(`note_added${payload.plant_id}`, result[0])
+				io.local.emit(`note_added${payload.plant_id}`, result[0])
 			}
 			})
 		
@@ -243,14 +243,14 @@ io.on('connection', (socket, req) => {
 			if (err) {
 				console.log(err)
 			} else {
-				io.emit(`image_added${payload.plant_id}`, result[0])
+				io.local.emit(`image_added${payload.plant_id}`, result[0])
 			}
 			})
 		
 			break;
 			
 			case "action_deleted":
-			io.emit(`action_deleted${payload.plant_id}`, payload)
+			io.local.emit(`action_deleted${payload.plant_id}`, payload)
 			break;
 
 

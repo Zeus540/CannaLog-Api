@@ -252,16 +252,19 @@ module.exports = {
 
     pubClient = req.app.locals.pubClient
 
-    let time_zone = req.body.time_zone
+    let time_zone = req.body.timezone
     // Parse the user-submitted date string in the user's timezone
 
+    console.log("time_zone",time_zone)
+    console.log("req.body.creation_date",req.body.creation_date)
     const userDate = parse(req.body.creation_date, 'yyyy-MM-dd HH:mm:ss', new Date(), { timeZone: time_zone });
-
+    console.log("userDate",userDate)
     // Convert the user's local date to UTC
     const utcDate = zonedTimeToUtc(userDate, time_zone);
 
     // Format the UTC date as a string
     const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
+
 
 
     switch (parseInt(req.params.type)) {
@@ -287,7 +290,7 @@ module.exports = {
 
               let str_payload = JSON.stringify(payload)
               pubClient.publish(process.env.CHANNEL, str_payload)
-              commit(connection, res, prev_results, result);
+              commit(connection, res, prev_result, result);
 
             }
           })

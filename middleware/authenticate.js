@@ -60,6 +60,13 @@ function authenticateToken(req, res, next) {
               expires: dayjs().add(30, "seconds").toDate(),
             });
 
+            await res.cookie("user", JSON.stringify(userCleaned), {
+              sameSite:'strict',
+              secure: true,
+              httpOnly: false ,
+              domain:".cannalog.co.za",
+              expires: dayjs().add(30, "seconds").toDate(),
+            });
             
 
             req.user = await userCleaned
@@ -100,7 +107,7 @@ function authenticateToken(req, res, next) {
 
             req.user = userCleaned
             next()
-            console.log("req.user",req.user)
+            // console.log("req.user",req.user)
           } catch (error) {
             console.log("error", error)
           }

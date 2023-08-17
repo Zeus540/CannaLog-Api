@@ -103,8 +103,9 @@ router.post('/', (req, res) => {
                   secure: true,
                   httpOnly: false ,
                   domain:".cannalog.co.za",
-                  expires: dayjs().add(7, "days").toDate(),
+                  expires: dayjs().add(30, "seconds").toDate(),
                 });
+                
                 res.sendStatus(200)
               } else {
                 res.sendStatus(401)

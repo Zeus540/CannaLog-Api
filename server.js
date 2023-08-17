@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const express = require("express");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+const { instrument } = require("@socket.io/admin-ui");
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const app = express();
@@ -36,6 +37,10 @@ const io = new Server(server, {
 
 io.adapter(createAdapter(pubClient, subClient));
 
+instrument(io, {
+	auth: false
+  });
+  
 app.locals.pubClient = pubClient
 
 const corsConfig = {

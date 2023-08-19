@@ -31,7 +31,8 @@ module.exports = {
   LEFT JOIN 
       users AS actors ON user_notifications.actor_user_id = actors.user_id -- Join with the users table for actor_user_id
   WHERE 
-      user_notifications.user_id = ?;
+      user_notifications.user_id = ?
+      ORDER BY creation_date DESC;
   
       `
   

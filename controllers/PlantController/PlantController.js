@@ -99,7 +99,7 @@ const { parse } = require('date-fns');
   function get_plant(connection,req,res,prev_results) {
 
     let sql = `
-    SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail, DATE_FORMAT(plants.creation_date,"%Y-%m-%dT%H:%i:%sZ") as creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail, DATE_FORMAT(plants.creation_date,"%Y-%m-%dT%H:%i:%sZ") as creation_date,plants.last_updated,plants.environment_id,environments.environment_name
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -131,13 +131,27 @@ module.exports = {
     */
     
     let sql_public = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
     JOIN strains ON strains.strain_id = plants.plant_strain
     JOIN environments ON environments.environment_id = plants.environment_id
+    LEFT JOIN plant_likes ON plants.plant_id = plant_likes.plant_id
+    LEFT JOIN plant_views ON plants.plant_id = plant_views.plant_id
     WHERE plants.public = 1
+    GROUP BY
+    users.user_name,
+    irrigation_types.irrigation_type,
+    strains.strain_name,
+    plants.plant_id,
+    plants.plant_name,
+    plants.cover_img,
+    plants.cover_thumbnail,
+    plants.creation_date,
+    plants.last_updated,
+    plants.environment_id,
+    environments.environment_name
     ORDER BY plants.creation_date DESC
     `
 
@@ -155,17 +169,29 @@ module.exports = {
     // #swagger.tags = ['Plants']
     ...
     */
-    
-
     let sql = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
     JOIN strains ON strains.strain_id = plants.plant_strain
     JOIN environments ON environments.environment_id = plants.environment_id
+    LEFT JOIN plant_likes ON plants.plant_id = plant_likes.plant_id
+    LEFT JOIN plant_views ON plants.plant_id = plant_views.plant_id
     WHERE plants.public = 1
     AND plants.user_id != ?
+    GROUP BY
+    users.user_name,
+    irrigation_types.irrigation_type,
+    strains.strain_name,
+    plants.plant_id,
+    plants.plant_name,
+    plants.cover_img,
+    plants.cover_thumbnail,
+    plants.creation_date,
+    plants.last_updated,
+    plants.environment_id,
+    environments.environment_name
     ORDER BY plants.creation_date DESC
     `
 
@@ -219,14 +245,29 @@ module.exports = {
     ...
     */
     let getMyPlants_sql = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,plants.views,plants.likes
+    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
     JOIN strains ON strains.strain_id = plants.plant_strain
     JOIN environments ON environments.environment_id = plants.environment_id
+    LEFT JOIN plant_likes ON plants.plant_id = plant_likes.plant_id
+    LEFT JOIN plant_views ON plants.plant_id = plant_views.plant_id
     WHERE plants.user_id = ?
-    ORDER BY plants.creation_date DESC
+    GROUP BY
+    users.user_name,
+    irrigation_types.irrigation_type,
+    strains.strain_name,
+    plants.plant_id,
+    plants.plant_name,
+    plants.cover_img,
+    plants.cover_thumbnail,
+    plants.creation_date,
+    plants.last_updated,
+    plants.environment_id,
+    environments.environment_name
+ORDER BY
+    plants.creation_date DESC;
     `
 
     db.query(getMyPlants_sql, [req.user.user_id], (err, result, fields) => {

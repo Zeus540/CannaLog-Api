@@ -10,7 +10,7 @@ const nutrients = require("./nutrients")
 const growers = require("./growers")
 const measurement_units = require("./measurement_units")
 const notes = require("./notes")
-
+const notifications = require("./notifications")
 
 const router = express.Router()
 
@@ -28,6 +28,7 @@ router.use("/irrigation_types", irrigation_types);
 router.use("/nutrients", nutrients);
 router.use("/growers", growers);
 router.use("/notes", notes);
+router.use("/user", notifications);
 router.use("/logout", logout);
 router.use("/verify", verify);
 router.use("/measurement_units", measurement_units);

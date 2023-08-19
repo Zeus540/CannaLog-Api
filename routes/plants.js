@@ -22,6 +22,7 @@ router.post('/add',authenticateToken,PlantController.add)
 router.patch('/:plant_id/cover_image',authenticateToken,PlantController.update_cover_image)
 router.post('/current_stage',PlantController.current_stage)
 router.post('/current_environment',PlantController.current_environment)
+router.post('/viewed/:plant_id',authenticateToken,PlantController.plant_viewed)
 
 router.post('/actions', PlantActionController.get)
 router.get('/actions_types', PlantActionController.getActionTypes)

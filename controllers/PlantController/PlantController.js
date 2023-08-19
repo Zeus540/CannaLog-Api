@@ -4,9 +4,6 @@ const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_help
 const { zonedTimeToUtc, format } = require('date-fns-tz');
 const { parse } = require('date-fns');
 
-
-
-
   // Query 1
   function insert_plant(req,res,connection) {
 
@@ -99,7 +96,7 @@ const { parse } = require('date-fns');
   function get_plant(connection,req,res,prev_results) {
 
     let sql = `
-    SELECT users.user_name,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail, DATE_FORMAT(plants.creation_date,"%Y-%m-%dT%H:%i:%sZ") as creation_date,plants.last_updated,plants.environment_id,environments.environment_name
+    SELECT users.user_name,users.user_id,irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail, DATE_FORMAT(plants.creation_date,"%Y-%m-%dT%H:%i:%sZ") as creation_date,plants.last_updated,plants.environment_id,environments.environment_name
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -123,6 +120,83 @@ const { parse } = require('date-fns');
   }
  
 
+   // Query 5
+   function plant_viewed(req,res,connection) {
+
+    let creation_date = req.body.creation_date
+    let time_zone = req.body.timezone
+
+    // Parse the user-submitted date string in the user's timezone
+    const userDate = parse(creation_date, 'yyyy-MM-dd HH:mm:ss', new Date(), { timeZone: time_zone });
+
+    // Convert the user's local date to UTC
+    const utcDate  = zonedTimeToUtc(userDate, time_zone);
+
+    // Format the UTC date as a string
+    const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
+
+    let plant_viewed_sql = `
+    INSERT INTO plant_views(plant_id, plant_viewer_user_id, creation_date) VALUES (${req.params.plant_id},${req.user.user_id},'${utcTimestamp}')
+    `
+
+     db.query(plant_viewed_sql,[req.params.plant_id], (err, result, fields) => {
+       if (err) {
+         console.log(err)
+       } else {
+        insert_notification(req,res,result,connection,2)
+       }
+     })
+  }
+
+   // Query 6
+   function insert_notification(req,res,prev_result,connection,type) {
+
+
+    let creation_date = req.body.creation_date
+    let time_zone = req.body.timezone
+    console.log("req.body",req.body)
+
+    // Parse the user-submitted date string in the user's timezone
+    const userDate = parse(creation_date, 'yyyy-MM-dd HH:mm:ss', new Date(), { timeZone: time_zone });
+
+    // Convert the user's local date to UTC
+    const utcDate  = zonedTimeToUtc(userDate, time_zone);
+
+    // Format the UTC date as a string
+    const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
+
+    let user_notifications_sql = `
+    INSERT INTO user_notifications( user_id, notification_action_id, plant_id, actor_user_id, creation_date) VALUES (${req.body.plant_user_id},${type},${req.params.plant_id},${req.user.user_id},'${utcTimestamp}')
+    `
+
+     db.query(user_notifications_sql,[req.params.plant_id], (err, result, fields) => {
+       if (err) {
+         console.log(err)
+       } else {
+         notify(req,res,result)
+        commit(connection,res,prev_result)
+       
+       }
+     })
+  }
+
+ 
+  function notify(req,res,prev_result){
+    pubClient = req.app.locals.pubClient
+
+    console.log("plant_user_id",req.body.plant_user_id)
+
+    let payload = {
+      type: "notify",
+      user: req.body.plant_user_id,
+      data: prev_result.insertId
+    }
+
+    let str_payload = JSON.stringify(payload)
+    pubClient.publish(process.env.CHANNEL, str_payload)
+
+  }
+
 module.exports = {
   getPublic: (req, res) => {
     /* ...
@@ -131,7 +205,7 @@ module.exports = {
     */
     
     let sql_public = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
+    SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -170,7 +244,7 @@ module.exports = {
     ...
     */
     let sql = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
+    SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -245,7 +319,7 @@ module.exports = {
     ...
     */
     let getMyPlants_sql = `
-    SELECT users.user_name, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
+    SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -383,6 +457,32 @@ console.log("req.body.cover_thumbnail",req.body.cover_thumbnail)
         res.send(result[0])
       }
     })
+  },
+  plant_viewed: (req, res) => {
+    /* ...
+      // #swagger.tags = ['Plants']
+      ...
+      */
+      db.getConnection((error, connection) => {
+        if (error) {
+          console.error('Error acquiring connection from the pool: ', error);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+        }
+
+      connection.beginTransaction((error) => {
+      if (error) {
+        console.error('Error starting the transaction: ', error);
+        releaseConnectionAndRespond(connection, res, 500, 'Internal server error');
+        return;
+      }
+      plant_viewed(req,res,connection)
+
+    
+    });
+
+});
+
   }
 }
 

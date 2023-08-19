@@ -254,6 +254,43 @@ io.on('connection', (socket, req) => {
 			break;
 
 
+			case "notify":
+
+			let get_notification_sql = `
+			SELECT
+			user_notifications.user_notification_id,
+			user_notifications.plant_id,
+			user_notifications.notification_read,
+			users_receiver.user_name AS receiver_user_name,
+			users_actor.user_name AS actor_user_name,
+			notification_actions.notification_action_type AS notification_type,
+			DATE_FORMAT(user_notifications.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date
+			FROM
+				user_notifications 
+			JOIN
+				users AS users_receiver ON user_notifications.user_id = users_receiver.user_id
+			JOIN
+				users AS users_actor ON user_notifications.actor_user_id = users_actor.user_id
+			JOIN
+				notification_actions ON user_notifications.notification_action_id = notification_actions.notification_action_id
+			WHERE
+				user_notifications.user_notification_id = ?;
+		
+			`
+		
+			db.query(get_notification_sql, [payload.data], (err, result, fields) => {
+			if (err) {
+				console.log(err)
+			} else {
+				console.log("notify result",payload.user)
+
+				io.local.emit(`notification${payload.user}`, result[0])
+			}
+			})
+
+			
+			break;
+			
 
 			
 			default:

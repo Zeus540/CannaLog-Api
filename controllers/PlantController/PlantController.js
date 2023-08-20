@@ -1,5 +1,4 @@
 const db = require('../../lib/db')
-const { formatToTimeZone } = require('date-fns-timezone');
 const {rollback,commit,releaseConnectionAndRespond} = require('../../lib/db_helper');
 const { zonedTimeToUtc, format } = require('date-fns-tz');
 const { parse } = require('date-fns');

@@ -4,7 +4,7 @@ const authenticateToken = require('../middleware/authenticate')
 const EnviromentController = require('../controllers/EnviromentController/EnviromentController')
 
 
-router.get('/', authenticateToken,EnviromentController.get)
+router.post('/', authenticateToken,EnviromentController.get)
 router.post('/add', authenticateToken, EnviromentController.add)
 router.delete('/delete/:environment_id', authenticateToken, EnviromentController.delete)
 router.patch('/edit/:environment_id', authenticateToken, EnviromentController.edit)

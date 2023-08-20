@@ -130,10 +130,36 @@ io.on('connection', (socket, req) => {
 			case "add_environment":
 
 			let sql = `
-			SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
-			FROM environment_types
-			JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
-			WHERE environments.environment_id = ?
+			SELECT
+    environments.environment_id,
+    environments.environment_name,
+    environments.environment_description,
+    environments.environment_light_exposure,
+    environments.environment_cover_img,
+    environments.creation_date,
+    environments.last_updated,
+    environment_types.environment_type_name,
+    environment_types.environment_type_id,
+    environment_length,
+    environment_width,
+    environment_height,
+    (
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'plant_id', plants.plant_id,
+                'plant_name', plants.plant_name,
+                'cover_img', plants.cover_img,
+                'environment_id', plants.environment_id
+            )
+        )
+        FROM plants
+        WHERE plants.environment_id = environments.environment_id
+    ) AS plants
+FROM
+    environments
+JOIN environment_types ON environments.environment_type_id = environment_types.environment_type_id
+WHERE
+    environments.environment_id = ?;
 			`
 				db.query(sql, [payload.data], (err, result, fields) => {
 					if (err) {

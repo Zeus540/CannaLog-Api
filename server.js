@@ -263,7 +263,7 @@ io.on('connection', (socket, req) => {
 			user_notifications.notification_read,
 			users_receiver.user_name AS receiver_user_name,
 			users_actor.user_name AS actor_user_name,
-			notification_actions.notification_action_type AS notification_type,
+			notification_actions.notification_action_type AS notification_action_type,
 			DATE_FORMAT(user_notifications.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date
 			FROM
 				user_notifications 

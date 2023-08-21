@@ -29,10 +29,10 @@ if(req.query.limit == undefined ){
 
 let last_value = req.query.key_sort
 
-let utcTimestamp = ''
+let utcTimestamp = ""
 
 if(last_value == "undefined"){
-  utcTimestamp = '';
+  utcTimestamp = "";
 
 
 }else{
@@ -44,7 +44,7 @@ if(last_value == "undefined"){
   //  const utcDate  = zonedTimeToUtc(userDate,time_zone);
   //  // Format the UTC date as a string
   //  utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
-console.log("last_value",last_value)
+
 utcTimestamp = last_value;
 // console.log("utcTimestamp",utcTimestamp)
 }
@@ -55,6 +55,7 @@ utcTimestamp = last_value;
     let get_environment_sql = `
     SELECT environments.environment_id, 
     environments.user_id,
+    environments.environment_type_id,
     environment_types.environment_type_name,
     environments.environment_name,
     environments.environment_light_exposure,
@@ -62,38 +63,42 @@ utcTimestamp = last_value;
     environments.environment_width,
     environments.environment_height,
     environments.environment_cover_img,
-    DATE_FORMAT(environments.creation_date, "%Y-%m-%dT%H:%i:%s.000Z") AS creation_date,
+    environments.creation_date,
     (SELECT JSON_ARRAYAGG(JSON_OBJECT('plant_id', plants.plant_id, 'plant_name', plants.plant_name,'cover_img', plants.cover_img,'environment_id', plants.environment_id))
      FROM plants 
      WHERE plants.environment_id = environments.environment_id) AS plants
 FROM environment_types
 JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
-WHERE environments.user_id = ? AND environments.creation_date > ?
+WHERE environments.user_id = ? AND environments.creation_date ${utcTimestamp == "" ? ">":"<"} ?
 ORDER BY creation_date ${orderBy}
 LIMIT ?
     `
-
-    db.query(get_environment_sql, [req.user.user_id,`${utcTimestamp}`,limit], (err, result, fields) => {
+   
+    db.query(get_environment_sql, [req.user.user_id,`${utcTimestamp}`,limit], (err, result_pagination, fields) => {
       if (err) {
         console.log(err)
 
       } else {
+
       let sql_pagination_total = `SELECT COUNT(*) AS total FROM environments WHERE environments.user_id = ?`
-        db.query(sql_pagination_total, [req.user.user_id], (err, result_pagination, fields) => {
+        db.query(sql_pagination_total, [req.user.user_id], (err, result, fields) => {
           if (err) {
             console.log(err)
     
           } else {
-            console.log(result_pagination[0])
-            console.log(result.length)
+       
+           
+            let next_cursor = result_pagination[result_pagination.length - 1]?.creation_date
+            let total_count = result[0].total
+            let has_more = result_pagination.length > limit - 1; 
             let paginated_result = 
             {
-                data: result,
-                total: result_pagination[0].total,
-                // page: Math.ceil(result_pagination[0].total / limit), // Corrected calculation
-                // total_pages: Math.ceil(result_pagination[0].total / limit),
+                data: result_pagination,
+                next_cursor:next_cursor,
+                has_more:has_more,
+                total_count: total_count,
             };
-            
+       
             res.send(paginated_result)
     
             
@@ -171,7 +176,9 @@ LIMIT ?
     delete req.body.environment_id
     delete req.body.creation_date
     delete req.body.last_updated
-
+    delete req.body.timezone
+    delete req.body.plants
+    
     let sql = `
       UPDATE environments SET ${Object.keys(req.body).map(key => `${key} = ?`).join(', ')}
        WHERE environment_id = ?

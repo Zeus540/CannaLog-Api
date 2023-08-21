@@ -111,7 +111,7 @@ const { parse } = require('date-fns');
         rollback(connection, res);
         return;
       }
-      commit(connection,res, prev_results, results);
+      commit(connection,res, results, prev_results);
       console.log('Results of query 4: ', results);
 
 
@@ -356,14 +356,14 @@ ORDER BY
         // #swagger.tags = ['Plants']
         ...
         */
-        // Acquire a connection from the pool
+        
         db.getConnection((error, connection) => {
           if (error) {
             console.error('Error acquiring connection from the pool: ', error);
             res.status(500).json({ error: 'Internal server error' });
             return;
           }
-            // Start the transaction
+            
         connection.beginTransaction((error) => {
         if (error) {
           console.error('Error starting the transaction: ', error);
@@ -371,7 +371,7 @@ ORDER BY
           return;
         }
 
-        // Perform queries within the transaction
+        
         insert_plant(req,res,connection);
       
       });

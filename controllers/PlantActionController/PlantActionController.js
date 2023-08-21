@@ -320,14 +320,14 @@ module.exports = {
           })
 
         }
-        // Acquire a connection from the pool
+        
         db.getConnection((error, connection) => {
           if (error) {
             console.error('Error acquiring connection from the pool: ', error);
             res.status(500).json({ error: 'Internal server error' });
             return;
           }
-          // Start the transaction
+          
           connection.beginTransaction((error) => {
             if (error) {
               console.error('Error starting the transaction: ', error);
@@ -335,7 +335,7 @@ module.exports = {
               return;
             }
 
-            // Perform queries within the transaction
+            
             insert_action_stage(req, res, connection);
 
           });
@@ -364,7 +364,7 @@ module.exports = {
 
               let str_payload = JSON.stringify(payload)
               pubClient.publish(process.env.CHANNEL, str_payload)
-              commit(connection, res, 200, result);
+              commit(connection, res, prev_result, result);
 
             }
           })
@@ -394,14 +394,14 @@ module.exports = {
           })
 
         }
-        // Acquire a connection from the pool
+        
         db.getConnection((error, connection) => {
           if (error) {
             console.error('Error acquiring connection from the pool: ', error);
             res.status(500).json({ error: 'Internal server error' });
             return;
           }
-          // Start the transaction
+          
           connection.beginTransaction((error) => {
             if (error) {
               console.error('Error starting the transaction: ', error);
@@ -409,7 +409,7 @@ module.exports = {
               return;
             }
 
-            // Perform queries within the transaction
+            
             insert_action_note(req, res, connection);
 
           });
@@ -494,7 +494,7 @@ module.exports = {
 
         }
 
-        // Acquire a connection from the pool
+        
         db.getConnection((error, connection) => {
           if (error) {
             console.error('Error acquiring connection from the pool: ', error);
@@ -502,7 +502,7 @@ module.exports = {
             return;
           }
 
-            // Start the transaction
+            
             connection.beginTransaction((error) => {
             if (error) {
               console.error('Error starting the transaction: ', error);
@@ -510,7 +510,7 @@ module.exports = {
               return;
             }
 
-            // Perform queries within the transaction
+            
             insert_action_image(req, res, connection);
             console.log("req", req.user)
 
@@ -616,14 +616,14 @@ module.exports = {
           })
 
         }
-        // Acquire a connection from the pool
+        
         db.getConnection((error, connection) => {
           if (error) {
             console.error('Error acquiring connection from the pool: ', error);
             res.status(500).json({ error: 'Internal server error' });
             return;
           }
-          // Start the transaction
+          
           connection.beginTransaction((error) => {
             if (error) {
               console.error('Error starting the transaction: ', error);
@@ -631,7 +631,7 @@ module.exports = {
               return;
             }
 
-            // Perform queries within the transaction
+            
             insert_action_feeding(req, res, connection);
 
           });

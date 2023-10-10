@@ -25,9 +25,11 @@ const subClient = pubClient.duplicate();
 pubClient.connect()
 subClient.connect()
 
+const allowedOrigins = ["http://localhost:5173","https://cannalog.co.za"]
+
 const io = new Server(server, {
 	cors: {
-		origin: true,
+		origin: allowedOrigins,
 		credentials: true
 	},
 	// cookie: {
@@ -44,7 +46,7 @@ instrument(io, {
 app.locals.pubClient = pubClient
 
 const corsConfig = {
-	origin: true,
+	origin: allowedOrigins,
 	credentials: true,
 	allowedHeaders: "Content-Type, Authorization, X-Request_With",
 };

@@ -44,27 +44,27 @@ function authenticateToken(req, res, next) {
            await res.clearCookie("session_refresh")
 
            await res.cookie("session_refresh", generateRefreshToken(userCleaned), {
-              //sameSite:'strict',
-              //secure: true,
-              //httpOnly: true ,
-              //domain:".cannalog.co.za",
+              sameSite:'strict',
+              secure: true,
+              httpOnly: true ,
+              domain:".cannalog.co.za",
               expires: dayjs().add(7, "days").toDate(),
             });
 
 
             await res.cookie("session", generateAccessToken(userCleaned), {
-              //sameSite:'strict',
-              //secure: true,
-              //httpOnly: true ,
-              //domain:".cannalog.co.za",
+              sameSite:'strict',
+              secure: true,
+              httpOnly: true ,
+              domain:".cannalog.co.za",
               expires: dayjs().add(30, "seconds").toDate(),
             });
 
             await res.cookie("user", JSON.stringify(userCleaned), {
-              //sameSite:'strict',
-              //secure: true,
-              //httpOnly: false ,
-              //domain:".cannalog.co.za",
+              sameSite:'strict',
+              secure: true,
+              httpOnly: false ,
+              domain:".cannalog.co.za",
               expires: dayjs().add(7, "days").toDate(),
             });
             

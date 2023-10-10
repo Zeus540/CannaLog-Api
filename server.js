@@ -356,6 +356,4 @@ WHERE
 	});
 
 
-server.listen(10000, () => { console.log('App listening on port 10000') })
-
-
+server.listen(5050, () => { console.log('App listening on port 5050') })

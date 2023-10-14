@@ -33,24 +33,9 @@ let utcTimestamp = ""
 
 if(last_value == "undefined"){
   utcTimestamp = "";
-
-
 }else{
- 
-  //  let time_zone = req.body.timezone
-  //  // Parse the user-submitted date string in the user's timezone
-  //  const userDate = parse(last_value, 'yyyy-MM-dd HH:mm:ss', new Date(), { timeZone:time_zone });
-  //  // Convert the user's local date to UTC
-  //  const utcDate  = zonedTimeToUtc(userDate,time_zone);
-  //  // Format the UTC date as a string
-  //  utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
-
-utcTimestamp = last_value;
-// console.log("utcTimestamp",utcTimestamp)
+  utcTimestamp = last_value;
 }
-
-
-
 
     let get_environment_sql = `
     SELECT environments.environment_id, 
@@ -74,23 +59,24 @@ ORDER BY creation_date ${orderBy}
 LIMIT ?
     `
    
-    db.query(get_environment_sql, [req.user.user_id,`${utcTimestamp}`,limit], (err, result_pagination, fields) => {
+  db.query(get_environment_sql, [req.user.user_id,`${utcTimestamp}`,limit], (err, result_pagination, fields) => {
       if (err) {
         console.log(err)
 
       } else {
 
       let sql_pagination_total = `SELECT COUNT(*) AS total FROM environments WHERE environments.user_id = ?`
+
         db.query(sql_pagination_total, [req.user.user_id], (err, result, fields) => {
           if (err) {
             console.log(err)
     
           } else {
        
-           
             let next_cursor = result_pagination[result_pagination.length - 1]?.creation_date
             let total_count = result[0].total
             let has_more = result_pagination.length > limit - 1; 
+
             let paginated_result = 
             {
                 data: result_pagination,
@@ -98,10 +84,8 @@ LIMIT ?
                 has_more:has_more,
                 total_count: total_count,
             };
-       
-            res.send(paginated_result)
-    
             
+            res.send(paginated_result)
     
           }
         })

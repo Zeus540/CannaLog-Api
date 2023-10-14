@@ -16,7 +16,7 @@ const router = express.Router()
 
 router.use(function (req, res, next) {
     const userIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    console.log(req.path + userIP)
+    console.log(req.path + " " + userIP)
     next();
 });
 
@@ -32,4 +32,5 @@ router.use("/user", notifications);
 router.use("/logout", logout);
 router.use("/verify", verify);
 router.use("/measurement_units", measurement_units);
+
 module.exports = router

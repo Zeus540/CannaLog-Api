@@ -21,7 +21,7 @@ router.delete('/delete/:plant_id', authenticateToken, PlantController.delete);
 // Plant Actions
 router.get('/actions_types', PlantActionController.getActionTypes);
 router.post('/actions', PlantActionController.get);
-router.post('/actions/:type', PlantActionController.getActionDataByType);
+router.post('/actions/:type/:plant_id?', PlantActionController.getActionDataByType);
 router.post('/take_action/:type', authenticateToken, upload.single("file"), PlantActionController.takeAction);
 router.delete('/:plant_id/delete_action/:plant_action_id', authenticateToken, PlantActionController.deleteAction);
 

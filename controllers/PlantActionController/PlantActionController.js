@@ -170,7 +170,7 @@ module.exports = {
 				WHERE plant_stages.plant_id = ?
 				ORDER BY creation_date DESC
         `
-        db.query(sql, [req.body.plant_id], (err, result, fields) => {
+        db.query(sql, [req.params.plant_id], (err, result, fields) => {
           if (err) {
             console.log(err)
           } else {
@@ -186,7 +186,7 @@ module.exports = {
           WHERE plant_notes.plant_id = ?
           ORDER BY creation_date DESC
           `
-        db.query(sql, [req.body.plant_id], (err, result, fields) => {
+        db.query(sql, [req.params.plant_id], (err, result, fields) => {
           if (err) {
             console.log(err)
           } else {
@@ -202,7 +202,7 @@ module.exports = {
             WHERE plant_images.plant_id = ?
             ORDER BY creation_date DESC
             `
-        db.query(sql, [req.body.plant_id], (err, result, fields) => {
+        db.query(sql, [req.params.plant_id], (err, result, fields) => {
           if (err) {
             console.log(err)
           } else {
@@ -223,17 +223,39 @@ module.exports = {
         DATE_FORMAT(plant_feeding.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,
         nutrient_options.nutrient_name,
         measurement_units.measurement_unit_id,
-        measurement_units.measurement_unit
+        measurement_units.measurement_unit,
+        NULL AS water_amount,
+        NULL AS water_amount_measurement
     FROM 
-        nutrient_options
+        plant_feeding
     JOIN
-        plant_feeding ON plant_feeding.nutrient_id = nutrient_options.nutrient_id
+        nutrient_options ON plant_feeding.nutrient_id = nutrient_options.nutrient_id
     JOIN
         measurement_units ON plant_feeding.nutrient_measurement = measurement_units.measurement_unit_id
     WHERE 
-        plant_feeding.plant_id = ?;
+        plant_feeding.plant_id = ?
+    UNION
+    SELECT
+        NULL AS plant_feeding_id,
+        plant_watering.plant_id,
+        NULL AS user_id,
+        plant_watering.plant_action_id,
+        NULL AS nutrient_amount,
+        DATE_FORMAT(plant_watering.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,
+        NULL AS nutrient_name,
+        measurement_units.measurement_unit_id,
+        measurement_units.measurement_unit,
+        plant_watering.water_amount,
+        plant_watering.water_amount_measurement
+    FROM
+        plant_watering
+    JOIN
+        measurement_units ON plant_watering.water_amount_measurement = measurement_units.measurement_unit_id
+    WHERE 
+        plant_watering.plant_id = ?;
+    
               `
-        db.query(sql, [req.body.plant_id], (err, result, fields) => {
+        db.query(sql, [req.params.plant_id,req.params.plant_id], (err, result, fields) => {
           if (err) {
             console.log(err)
           } else {
@@ -320,7 +342,6 @@ module.exports = {
           })
 
         }
-        
         db.getConnection((error, connection) => {
           if (error) {
             console.error('Error acquiring connection from the pool: ', error);
@@ -341,7 +362,7 @@ module.exports = {
           });
 
         });
-        break;
+      break;
 
       case 13:
         function insert_note_action(req, res, connection, prev_result) {
@@ -393,8 +414,7 @@ module.exports = {
             }
           })
 
-        }
-        
+        } 
         db.getConnection((error, connection) => {
           if (error) {
             console.error('Error acquiring connection from the pool: ', error);
@@ -418,7 +438,6 @@ module.exports = {
         break;
 
       case 4:
-
 
         function insert_action_image(req, res, connection) {
           sql = `INSERT INTO plant_actions (plant_id, user_id, plant_action_type_id, creation_date) VALUES (${req.body.plant_id},${req.user.user_id},${parseInt(req.params.type)},'${utcTimestamp}')`
@@ -494,7 +513,6 @@ module.exports = {
 
         }
 
-        
         db.getConnection((error, connection) => {
           if (error) {
             console.error('Error acquiring connection from the pool: ', error);
@@ -519,7 +537,7 @@ module.exports = {
         });
 
 
-        break;
+      break;
 
       case 1:
 
@@ -589,8 +607,6 @@ module.exports = {
           })
         }
 
-       
-
         function insert_action_feeding(req, res, connection) {
           sql = `INSERT INTO plant_actions (plant_id, user_id, plant_action_type_id, creation_date) VALUES (${req.body.plant_id},${req.user.user_id},${req.body.plant_action_type_id},'${utcTimestamp}')`
 
@@ -637,7 +653,7 @@ module.exports = {
           });
 
         });
-        break;
+      break;
 
 
     }

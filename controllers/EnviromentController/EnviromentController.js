@@ -49,7 +49,7 @@ if(last_value == "undefined"){
     environments.environment_height,
     environments.environment_cover_img,
     environments.creation_date,
-    (SELECT JSON_ARRAYAGG(JSON_OBJECT('plant_id', plants.plant_id, 'plant_name', plants.plant_name,'cover_img', plants.cover_img,'environment_id', plants.environment_id))
+    (SELECT JSON_ARRAYAGG(JSON_OBJECT('plant_id', plants.plant_id, 'plant_name', plants.plant_name,'cover_thumbnail', plants.cover_thumbnail,'environment_id', plants.environment_id))
      FROM plants 
      WHERE plants.environment_id = environments.environment_id) AS plants
 FROM environment_types

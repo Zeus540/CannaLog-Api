@@ -28,8 +28,10 @@ router.delete('/:plant_id/delete_action/:plant_action_id', authenticateToken, Pl
 // Plant Information
 router.get('/public', PlantController.getPublic);
 router.get('/public_signed_in', authenticateToken, PlantController.getPublicSignedIn);
-router.post('/plant_id',  authenticateToken, PlantController.get_detailed_plant_info); // Specific route should be at the end
-router.get('/', authenticateToken, PlantController.getMyPlants); // General route should be after the specific one
+router.post('/:plant_id', authenticateToken, PlantController.get_detailed_plant_info);
+router.post('/public/:plant_id', PlantController.get_detailed_plant_info_public);
+
+router.get('/my_plants', authenticateToken, PlantController.getMyPlants); 
 
 
 module.exports = router;

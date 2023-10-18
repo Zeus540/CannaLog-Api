@@ -557,18 +557,18 @@ module.exports = {
                   rollback(connection, res);
                 } else {
                   if (index == req.body.nutrient_list.length - 1) {
-                    // let payload = {
-                    //   type: "note_added",
-                    //   user: req.user,
-                    //   plant_id:req.body.plant_id,
-                    //   data: result.insertId
-                    // }
+                    let payload = {
+                      type: "feeding_added",
+                      user: req.user,
+                      plant_id:req.body.plant_id,
+                      data: result.insertId
+                    }
+     
+                    let str_payload = JSON.stringify(payload)
+                    pubClient.publish(process.env.CHANNEL, str_payload)
 
-                    // let str_payload = JSON.stringify(payload)
-                    // pubClient.publish(process.env.CHANNEL, str_payload)
-
-
-                    res.send(result)
+                    commit(connection, res, result);
+                 
                   }
                 }
               })
@@ -587,19 +587,22 @@ module.exports = {
               rollback(connection, res);
             } else {
 
-              // let payload = {
-              //   type: "note_added",
-              //   user: req.user,
-              //   plant_id:req.body.plant_id,
-              //   data: result.insertId
-              // }
-
-              // let str_payload = JSON.stringify(payload)
-              // pubClient.publish(process.env.CHANNEL, str_payload)
+              
 
               if(req.body.nutrient_list.length > 0){
+              
                 insert_feeding_action(req, res, connection, prev_result)
               }else{
+                let payload = {
+                  type: "watering_added",
+                  user: req.user,
+                  plant_id:req.body.plant_id,
+                  data: result.insertId
+                }
+ 
+                let str_payload = JSON.stringify(payload)
+                pubClient.publish(process.env.CHANNEL, str_payload)
+
                 commit(connection, res, prev_result, result);
               }
 

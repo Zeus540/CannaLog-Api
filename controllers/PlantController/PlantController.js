@@ -405,15 +405,46 @@ ORDER BY
       SELECT DATE_FORMAT(plant_stages.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,plant_stages.last_updated,plant_stages.plant_action_id,plant_stages.plant_id,plant_stages.plant_stage,plant_stages.plant_stage_id,plant_stages.user_id,stages.stage_name,stages.stage_color
       FROM plant_stages
       JOIN stages ON stages.stage_id = plant_stages.plant_stage
-      WHERE plant_id = ?
+      JOIN plants ON plant_stages.plant_id = plants.plant_id
+      WHERE plant_stages.plant_id = ?  AND plants.user_id = ?
+      ORDER BY creation_date DESC
+      LIMIT 1
+      `
+    db.query(current_stage_sql, [req.body.plant_id,req.user.user_id], (err, result, fields) => {
+      if (err) {
+        res.status(500).send(err)
+      } else {
+        if(result.length > 0){
+          res.send(result[0])
+        }else{
+          res.status(401).send("Unable to fetch stage data for the requested plant")
+        }
+      }
+    })
+  },
+  current_stage_public: (req, res) => {
+    /* ...
+      // #swagger.tags = ['Plants']
+      ...
+      */
+      let current_stage_sql = `
+      SELECT DATE_FORMAT(plant_stages.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,plant_stages.last_updated,plant_stages.plant_action_id,plant_stages.plant_id,plant_stages.plant_stage,plant_stages.plant_stage_id,plant_stages.user_id,stages.stage_name,stages.stage_color
+      FROM plant_stages
+      JOIN stages ON stages.stage_id = plant_stages.plant_stage
+      JOIN plants ON plant_stages.plant_id = plants.plant_id
+      WHERE plant_stages.plant_id = ? AND plants.public = 1
       ORDER BY creation_date DESC
       LIMIT 1
       `
     db.query(current_stage_sql, [req.body.plant_id], (err, result, fields) => {
       if (err) {
-        console.log(err)
+        res.status(500).send(err)
       } else {
-        res.send(result[0])
+        if(result.length > 0){
+          res.send(result[0])
+        }else{
+          res.status(401).send("Unable to fetch stage data for the requested plant")
+        }
       }
     })
   },
@@ -423,10 +454,61 @@ ORDER BY
       ...
       */
       let sql = `
-      SELECT environments.environment_id,environments.environment_name,environments.environment_description,environments.environment_light_exposure,environments.environment_cover_img,environments.creation_date,environments.last_updated,environment_types.environment_type_name,environment_types.environment_type_id,environment_length,environment_width,environment_height
+      SELECT 
+      environments.environment_id,
+      plants.public,
+      environments.environment_name,
+      environments.environment_description,
+      environments.environment_light_exposure,
+      environments.environment_cover_img,
+      environments.creation_date,
+      environments.last_updated,
+      environment_types.environment_type_name,
+      environment_types.environment_type_id,
+      environments.environment_length,
+      environments.environment_width,
+      environments.environment_height
       FROM environment_types
       JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
-      WHERE environments.environment_id = ?
+      JOIN plants ON environments.environment_id = plants.environment_id
+      WHERE environments.environment_id = ? AND plants.user_id = ?;
+      `
+    db.query(sql, [req.body.environment_id,req.user.user_id], (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        if(result.length > 0){
+          res.send(result[0])
+        }else{
+          res.status(401).send("Unable to fetch enviroment data for the requested plant")
+        }
+      }
+    })
+  },
+  current_environment_public: (req, res) => {
+    /* ...
+      // #swagger.tags = ['Plants']
+      ...
+      */
+      let sql = `
+      SELECT 
+      environments.environment_id,
+      plants.public,
+      environments.environment_name,
+      environments.environment_description,
+      environments.environment_light_exposure,
+      environments.environment_cover_img,
+      environments.creation_date,
+      environments.last_updated,
+      environment_types.environment_type_name,
+      environment_types.environment_type_id,
+      environments.environment_length,
+      environments.environment_width,
+      environments.environment_height
+      FROM environment_types
+      JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
+      JOIN plants ON environments.environment_id = plants.environment_id
+      WHERE environments.environment_id = ? AND plants.public = 1;
       `
     db.query(sql, [req.body.environment_id], (err, result, fields) => {
       if (err) {
@@ -435,11 +517,11 @@ ORDER BY
         if(result.length > 0){
           res.send(result[0])
         }else{
-          res.status(404).send("Unable to fetch Enviroment data for the requested plant")
+          res.status(401).send("Unable to fetch enviroment data for the requested plant")
         }
       }
     })
-  },
+  }, 
   update_cover_image: (req, res) => {
     /* ...
       // #swagger.tags = ['Plants']
@@ -492,7 +574,7 @@ console.log("req.body.cover_thumbnail",req.body.cover_thumbnail)
     let plant_id = req.params.plant_id
    
     let getMyPlants_sql = `
-    SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
+    SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,plants.public,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
     FROM users
     JOIN plants ON users.user_id = plants.user_id
     JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
@@ -500,7 +582,7 @@ console.log("req.body.cover_thumbnail",req.body.cover_thumbnail)
     JOIN environments ON environments.environment_id = plants.environment_id
     LEFT JOIN plant_likes ON plants.plant_id = plant_likes.plant_id
     LEFT JOIN plant_views ON plants.plant_id = plant_views.plant_id
-    WHERE plants.plant_id = ?
+    WHERE plants.public = 1 AND plants.plant_id = ?
     GROUP BY
     users.user_name,
     irrigation_types.irrigation_type,
@@ -525,7 +607,7 @@ ORDER BY
         if(result.length > 0){
           res.send(result[0])
         }else{
-          res.status(404).send("Unable to fetch information for the requested plant")
+          res.status(401).send("Unable to fetch information for the requested plant")
         }
   
       }
@@ -572,7 +654,7 @@ ORDER BY
           if(result.length > 0){
             res.send(result[0])
           }else{
-            res.status(404).send("Unable to fetch information for the requested plant")
+            res.status(401).send("Unable to fetch information for the requested plant")
           }
     
         }

@@ -116,7 +116,7 @@ const resizeAndUploadImage = async (originalPath, originalFileName, sizes, forma
 }
 
 module.exports = {
-  get: (req, res) => {
+  get_actions: (req, res) => {
     /* ...
     // #swagger.tags = ['Plants']
     ...
@@ -125,8 +125,30 @@ module.exports = {
     SELECT plant_action_types.plant_action_type_name, plant_actions.plant_action_id,plant_actions.plant_id,DATE_FORMAT(plant_actions.creation_date, "%Y-%m-%dT%H:%i:%sZ") creation_date,plant_actions.plant_action_type_id
     FROM plant_action_types
     JOIN plant_actions ON plant_action_types.plant_action_type_id = plant_actions.plant_action_type_id
+    JOIN plants ON plant_actions.plant_id = plants.plant_id
+    WHERE plant_actions.plant_id = ?  AND plants.user_id = ?
+    ORDER BY plant_actions.creation_date DESC
+        `
 
-    WHERE plant_actions.plant_id = ?
+    db.query(sql, [req.body.plant_id,req.user.user_id], (err, result, fields) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.send(result)
+      }
+    })
+  },
+  get_actions_public: (req, res) => {
+    /* ...
+    // #swagger.tags = ['Plants']
+    ...
+    */
+    let sql = `
+    SELECT plant_action_types.plant_action_type_name, plant_actions.plant_action_id,plant_actions.plant_id,DATE_FORMAT(plant_actions.creation_date, "%Y-%m-%dT%H:%i:%sZ") creation_date,plant_actions.plant_action_type_id
+    FROM plant_action_types
+    JOIN plant_actions ON plant_action_types.plant_action_type_id = plant_actions.plant_action_type_id
+    JOIN plants ON plant_actions.plant_id = plants.plant_id
+    WHERE plant_actions.plant_id = ? AND plants.public = 1 
     ORDER BY plant_actions.creation_date DESC
         `
 
@@ -134,7 +156,11 @@ module.exports = {
       if (err) {
         console.log(err)
       } else {
-        res.send(result)
+        if(result.length > 0){
+          res.send(result)
+        }else{
+          res.status(500).send("Unable to fetch enviroment data for the requested plant")
+        }
       }
     })
   },

@@ -12,15 +12,18 @@ const PlantActionController = require('../controllers/PlantActionController/Plan
 router.get('/stages', PlantController.getStages);
 router.get('/strains', PlantController.getStrains);
 router.post('/add', authenticateToken, PlantController.add);
-router.post('/current_stage', PlantController.current_stage);
-router.post('/current_environment', PlantController.current_environment);
+router.post('/current_stage',authenticateToken, PlantController.current_stage);
+router.post('/current_stage/public', PlantController.current_stage_public);
+router.post('/current_environment',authenticateToken, PlantController.current_environment);
+router.post('/current_environment/public', PlantController.current_environment_public);
 router.post('/viewed/:plant_id', authenticateToken, PlantController.plant_viewed);
 router.patch('/:plant_id/cover_image', authenticateToken, PlantController.update_cover_image);
 router.delete('/delete/:plant_id', authenticateToken, PlantController.delete);
 
 // Plant Actions
 router.get('/actions_types', PlantActionController.getActionTypes);
-router.post('/actions', PlantActionController.get);
+router.post('/actions',authenticateToken,  PlantActionController.get_actions);
+router.post('/actions/public', PlantActionController.get_actions_public);
 router.post('/actions/:type/:plant_id?', PlantActionController.getActionDataByType);
 router.post('/take_action/:type', authenticateToken, upload.single("file"), PlantActionController.takeAction);
 router.delete('/:plant_id/delete_action/:plant_action_id', authenticateToken, PlantActionController.deleteAction);

@@ -72,11 +72,11 @@ LIMIT ?
             console.log(err)
     
           } else {
-       
+          
             let next_cursor = result_pagination[result_pagination.length - 1]?.creation_date
             let total_count = result[0].total
-            let has_more = result_pagination.length > limit - 1; 
-
+            let has_more = result_pagination.length === limit; 
+         
             let paginated_result = 
             {
                 data: result_pagination,

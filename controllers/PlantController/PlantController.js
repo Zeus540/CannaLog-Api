@@ -312,7 +312,7 @@ module.exports = {
       }
     })
   },
-  getMyPlants: (req, res) => {
+  getMyPlants: async(req, res) => {
     /* ...
     // #swagger.tags = ['Plants']
     ...
@@ -390,7 +390,7 @@ module.exports = {
       `
     }
 
-    db.query(getMyPlants_sql, [req.user.user_id,`${key_sort}`], (err, result_pagination, fields) => {
+  await  db.query(getMyPlants_sql, [req.user.user_id,`${key_sort}`], (err, result_pagination, fields) => {
       if (err) {
         console.log(err)
       } else {

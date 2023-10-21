@@ -25,7 +25,7 @@ function authenticateToken(req, res, next) {
       if (refresh_token == undefined) {
 
         res.sendStatus(401)
-      } else {
+          } else {
 
         let isRefreshTokenExp = jwt.decode(refresh_token, process.env.TOKEN_REFRESH_SECRET).exp * 1000 < Date.now()
 
@@ -39,6 +39,10 @@ function authenticateToken(req, res, next) {
               user_email: user.user_email,
             }
 
+            let userCleanedToken = {
+              user_name: user.user_name,
+              user_email: user.user_email,
+            }
            
            await res.clearCookie("session")
            await res.clearCookie("session_refresh")
@@ -51,7 +55,6 @@ function authenticateToken(req, res, next) {
               expires: dayjs().add(7, "days").toDate(),
             });
 
-
             await res.cookie("session", generateAccessToken(userCleaned), {
               sameSite:'strict',
               secure: true,
@@ -60,7 +63,7 @@ function authenticateToken(req, res, next) {
               expires: dayjs().add(30, "seconds").toDate(),
             });
 
-            await res.cookie("user", JSON.stringify(userCleaned), {
+            await res.cookie("user", JSON.stringify(userCleanedToken), {
               sameSite:'strict',
               secure: true,
               httpOnly: false ,
@@ -73,11 +76,9 @@ function authenticateToken(req, res, next) {
             blacklisted.push(refresh_token)
             next()
 
-
           })
 
     
-
         } else {
           
           blacklisted.push(refresh_token)
@@ -86,8 +87,6 @@ function authenticateToken(req, res, next) {
           res.sendStatus(401)
         }
       }
-
-       
 
     } else {
 
@@ -114,6 +113,69 @@ function authenticateToken(req, res, next) {
 
         })
 
+      }else{
+        console.log("here")
+       
+          let isRefreshTokenExp = jwt.decode(refresh_token, process.env.TOKEN_REFRESH_SECRET).exp * 1000 < Date.now()
+  
+          if (isRefreshTokenExp == false) {
+  
+            jwt.verify(refresh_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
+  
+              let userCleaned = {
+                user_id: user.user_id,
+                user_name: user.user_name,
+                user_email: user.user_email,
+              }
+
+              let userCleanedToken = {
+                user_name: user.user_name,
+                user_email: user.user_email,
+              }
+             
+             await res.clearCookie("session")
+             await res.clearCookie("session_refresh")
+  
+             await res.cookie("session_refresh", generateRefreshToken(userCleaned), {
+                sameSite:'strict',
+                secure: true,
+                httpOnly: true ,
+                domain:".cannalog.co.za",
+                expires: dayjs().add(7, "days").toDate(),
+              });
+  
+              await res.cookie("session", generateAccessToken(userCleaned), {
+                sameSite:'strict',
+                secure: true,
+                httpOnly: true ,
+                domain:".cannalog.co.za",
+                expires: dayjs().add(30, "seconds").toDate(),
+              });
+  
+              await res.cookie("user", JSON.stringify(userCleanedToken), {
+                sameSite:'strict',
+                secure: true,
+                httpOnly: false ,
+                domain:".cannalog.co.za",
+                expires: dayjs().add(7, "days").toDate(),
+              });
+              
+  
+              req.user = await userCleaned
+              blacklisted.push(refresh_token)
+              next()
+  
+            })
+  
+      
+          } else {
+            
+            blacklisted.push(refresh_token)
+            res.clearCookie("session")
+            res.clearCookie("session_refresh")
+            res.sendStatus(401)
+          }
+        
       }
 
     }

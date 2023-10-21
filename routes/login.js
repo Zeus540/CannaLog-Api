@@ -70,11 +70,10 @@ router.post('/', (req, res) => {
                 }
 
                 UserObjCleaned = {
-                  user_id: User.user_id,
                   user_name: User.user_name,
                   acc_type: User.user_acc_type
                 }
-                 ""
+              
              
                 let token =  generateAccessToken(UserObj)
                 let refreshtoken  = generateRefreshToken(UserObj)

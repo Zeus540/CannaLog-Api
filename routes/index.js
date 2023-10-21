@@ -14,11 +14,11 @@ const notifications = require("./notifications")
 
 const router = express.Router()
 
-// router.use(function (req, res, next) {
-//     const userIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-//     console.log(req.path + " " + userIP)
-//     next();
-// });
+ router.use(function (req, res, next) {
+     const userIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+     console.log(req.path + " " + userIP)
+     next();
+ });
 
 router.use("/login", login);
 router.use("/register", register);

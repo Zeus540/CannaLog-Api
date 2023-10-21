@@ -62,66 +62,66 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
 
 
-// //Websocket Connections
-// io.on('connection', (socket, req) => {
+ //Websocket Connections
+ io.on('connection', (socket, req) => {
 
 
-// 	 const yourCookieValue = socket.request.headers.cookie
-// 	 	?.split(';')
-// 	 	?.map(cookie => cookie.trim())
-// 	 	?.find(cookie => cookie.startsWith('session'));
+ 	 const yourCookieValue = socket.request.headers.cookie
+ 	 	?.split(';')
+ 	 	?.map(cookie => cookie.trim())
+ 	 	?.find(cookie => cookie.startsWith('session'));
 
-// 	 let jwt_token = yourCookieValue?.split("=")[1]
+ 	 let jwt_token = yourCookieValue?.split("=")[1]
 	 
-// 	 if (jwt_token !== undefined) {
-// 	 	jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
+ 	 if (jwt_token !== undefined) {
+ 	 	jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
 
-// 	 		let sql = `
-// 	 	UPDATE users
-// 	 	SET is_logged_in = 1
-// 	 	WHERE user_id = ?`
-// 	 		db.query(sql, [await user?.user_id], (err, result, fields) => {
-// 	 			if (err) {
-// 	 				console.log(err)
+ 	 		let sql = `
+ 	 	UPDATE users
+ 	 	SET is_logged_in = 1
+ 	 	WHERE user_id = ?`
+ 	 		db.query(sql, [await user?.user_id], (err, result, fields) => {
+ 	 			if (err) {
+ 	 				console.log(err)
 
-// 	 			} else {
-// 	 				console.log(user?.user_name, 'connected');
-// 	 			}
-// 	 		})
-// 	 	})
-// 	 }
+ 	 			} else {
+ 	 				console.log(user?.user_name, 'connected');
+ 	 			}
+ 	 		})
+ 	 	})
+ 	 }
 
 
-// 	socket.on('disconnect', () => {
+ 	socket.on('disconnect', () => {
 
-// 	 	const yourCookieValue = socket.request.headers.cookie
-// 	 		?.split(';')
-// 	 		?.map(cookie => cookie.trim())
-// 	 		?.find(cookie => cookie.startsWith('session'));
+ 	 	const yourCookieValue = socket.request.headers.cookie
+ 	 		?.split(';')
+ 	 		?.map(cookie => cookie.trim())
+ 	 		?.find(cookie => cookie.startsWith('session'));
 
-// 	 let jwt_token = yourCookieValue?.split("=")[1]
+ 	 let jwt_token = yourCookieValue?.split("=")[1]
 	 
-// 	 	if (jwt_token !== undefined) {
+ 	 	if (jwt_token !== undefined) {
 
-// 	 		jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
+ 	 		jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
 
-// 	 			let sql = `
-// 	 		UPDATE users
-// 	 		SET is_logged_in = 0
-// 	 		WHERE user_id = ?`
-// 	 			db.query(sql, [await user?.user_id], (err, result, fields) => {
-// 	 				if (err) {
-// 	 					console.log(err)
+ 	 			let sql = `
+ 	 		UPDATE users
+ 	 		SET is_logged_in = 0
+ 	 		WHERE user_id = ?`
+ 	 			db.query(sql, [await user?.user_id], (err, result, fields) => {
+ 	 				if (err) {
+ 	 					console.log(err)
 
-// 	 				} else {
-// 	 					console.log(user?.user_name, 'disconnected');
-// 	 				}
-// 	 			})
-// 	 		})
-// 	 	}
+ 	 				} else {
+ 	 					console.log(user?.user_name, 'disconnected');
+ 	 				}
+ 	 			})
+ 	 		})
+ 	 	}
 
-// 	});
-// })
+ 	});
+ })
 
 	//Redis Subscribe 
 	subClient.subscribe(process.env.CHANNEL, (payload) => {

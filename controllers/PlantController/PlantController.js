@@ -317,7 +317,7 @@ module.exports = {
     // #swagger.tags = ['Plants']
     ...
     */
-  console.log("starting getMyPlants")
+
     let limit = ''
     let orderBy = ''
 
@@ -416,12 +416,13 @@ module.exports = {
             };
          
             res.send(paginated_result)
-            console.log("sent getMyPlants")
+ 
           }
         })
 
       }
     })
+           
   },
   add: (req, res) => {
     /* ...

@@ -12,81 +12,105 @@ module.exports = {
       ...
       */
 
-let limit = ''
-let orderBy = ''
+    let limit = ''
+    let orderBy = ''
 
-if(req.query.sort == undefined ){
-  orderBy = 'DESC'
-}else{
-  orderBy = req.query.sort
-}
+    if (req.query.sort == undefined) {
+      orderBy = 'DESC'
+    } else {
+      orderBy = req.query.sort
+    }
 
-if(req.query.limit == undefined ){
-  limit = ""
-}else{
-  limit = parseInt(req.query.limit)
-}
+    if (req.query.limit == undefined) {
+      limit = ""
+    } else {
+      limit = parseInt(req.query.limit)
+    }
 
-let last_value = req.query.key_sort
+    let key_sort = req.query.key_sort
 
-let utcTimestamp = ""
 
-if(last_value == "undefined"){
-  utcTimestamp = "";
-}else{
-  utcTimestamp = last_value;
-}
+    let get_environment_sql = ``
 
-    let get_environment_sql = `
-    SELECT environments.environment_id, 
-    environments.user_id,
-    environments.environment_type_id,
-    environment_types.environment_type_name,
-    environments.environment_name,
-    environments.environment_light_exposure,
-    environments.environment_length,
-    environments.environment_width,
-    environments.environment_height,
-    environments.environment_cover_img,
-    environments.creation_date,
-    (SELECT JSON_ARRAYAGG(JSON_OBJECT('plant_id', plants.plant_id, 'plant_name', plants.plant_name,'cover_thumbnail', plants.cover_thumbnail,'environment_id', plants.environment_id))
-     FROM plants 
-     WHERE plants.environment_id = environments.environment_id) AS plants
+    if (key_sort == "undefined") {
+      get_environment_sql = `
+  SELECT environments.environment_id, 
+  environments.user_id,
+  environments.environment_type_id,
+  environment_types.environment_type_name,
+  environments.environment_name,
+  environments.environment_light_exposure,
+  environments.environment_length,
+  environments.environment_width,
+  environments.environment_height,
+  environments.environment_cover_img,
+  environments.creation_date,
+  (SELECT JSON_ARRAYAGG(JSON_OBJECT('plant_id', plants.plant_id, 'plant_name', plants.plant_name,'cover_thumbnail', plants.cover_thumbnail,'environment_id', plants.environment_id))
+   FROM plants 
+   WHERE plants.environment_id = environments.environment_id) AS plants
 FROM environment_types
 JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
-WHERE environments.user_id = ? AND environments.creation_date ${utcTimestamp == "" ? ">":"<"} ?
+WHERE environments.user_id = ?   
 ORDER BY creation_date ${orderBy}
-LIMIT ?
-    `
-   
-  db.query(get_environment_sql, [req.user.user_id,`${utcTimestamp}`,limit], (err, result_pagination, fields) => {
+LIMIT ${limit}
+  `
+    } else {
+
+      get_environment_sql = `
+  SELECT environments.environment_id, 
+  environments.user_id,
+  environments.environment_type_id,
+  environment_types.environment_type_name,
+  environments.environment_name,
+  environments.environment_light_exposure,
+  environments.environment_length,
+  environments.environment_width,
+  environments.environment_height,
+  environments.environment_cover_img,
+  environments.creation_date,
+  (SELECT JSON_ARRAYAGG(JSON_OBJECT('plant_id', plants.plant_id, 'plant_name', plants.plant_name,'cover_thumbnail', plants.cover_thumbnail,'environment_id', plants.environment_id))
+   FROM plants 
+   WHERE plants.environment_id = environments.environment_id) AS plants
+FROM environment_types
+JOIN environments ON environments.environment_type_id = environment_types.environment_type_id
+WHERE environments.user_id = ? AND environments.creation_date < ?
+ORDER BY creation_date ${orderBy}
+LIMIT ${limit}
+  `
+    }
+
+
+
+
+    db.query(get_environment_sql, [req.user.user_id, `${key_sort}`], (err, result_pagination, fields) => {
       if (err) {
         console.log(err)
 
       } else {
 
-      let sql_pagination_total = `SELECT COUNT(*) AS total FROM environments WHERE environments.user_id = ?`
+        let sql_pagination_total = `SELECT COUNT(*) AS total FROM environments WHERE environments.user_id = ?`
 
         db.query(sql_pagination_total, [req.user.user_id], (err, result, fields) => {
           if (err) {
             console.log(err)
-    
+
           } else {
-          
-            let next_cursor = result_pagination[result_pagination.length - 1]?.creation_date
+
+            let next_cursor = result_pagination.length === limit ? result_pagination[result_pagination.length - 1]?.creation_date : null
             let total_count = result[0].total
-            let has_more = result_pagination.length === limit; 
-         
-            let paginated_result = 
+            let has_more = result_pagination.length === limit;
+
+            console.log("sadsad", result_pagination[result_pagination.length - 1]?.creation_date)
+            let paginated_result =
             {
-                data: result_pagination,
-                next_cursor:next_cursor,
-                has_more:has_more,
-                total_count: total_count,
+              data: result_pagination,
+              next_cursor: next_cursor,
+              has_more: has_more,
+              total_count: total_count,
             };
-            
+
             res.send(paginated_result)
-    
+
           }
         })
 
@@ -98,7 +122,7 @@ LIMIT ?
      // #swagger.tags = ['Environment']
      ...
      */
-     pubClient = req.app.locals.pubClient
+    pubClient = req.app.locals.pubClient
     console.log(isNaN(parseInt(req.body.environment_light_exposure)))
     let envObj = {
       user_id: req.user.user_id,
@@ -111,7 +135,7 @@ LIMIT ?
       environment_width: isNaN(parseInt(req.body.environment_width)) ? null : parseInt(req.body.environment_width),
       environment_cover_img: req.body.environment_type_id == 2 ? "https://s3.cannalog.co.za/sweetleaf/outdoor2.jpg" : "https://s3.cannalog.co.za/sweetleaf/indoor.jpg"
     }
-    
+
 
     console.log(req.body)
     const sql = 'INSERT INTO environments SET ?';
@@ -131,7 +155,7 @@ LIMIT ?
 
         let str_payload = JSON.stringify(payload)
         pubClient.publish(process.env.CHANNEL, str_payload)
-  
+
         res.send(result)
 
       }
@@ -142,9 +166,9 @@ LIMIT ?
       // #swagger.tags = ['Environment']
       ...
       */
-      pubClient = req.app.locals.pubClient
+    pubClient = req.app.locals.pubClient
     if (isNaN(parseInt(req.body.environment_light_exposure))) {
-     req.body.environment_light_exposure = null
+      req.body.environment_light_exposure = null
     }
     if (isNaN(parseInt(req.body.environment_length))) {
       req.body.environment_length = null
@@ -162,7 +186,7 @@ LIMIT ?
     delete req.body.last_updated
     delete req.body.timezone
     delete req.body.plants
-    
+
     let sql = `
       UPDATE environments SET ${Object.keys(req.body).map(key => `${key} = ?`).join(', ')}
        WHERE environment_id = ?
@@ -182,7 +206,7 @@ LIMIT ?
           user: req.user,
           data: parseInt(req.params.environment_id)
         }
-       
+
         let str_payload = JSON.stringify(payload)
         pubClient.publish(process.env.CHANNEL, str_payload)
 
@@ -196,7 +220,7 @@ LIMIT ?
       // #swagger.tags = ['Environment']
       ...
       */
-      pubClient = req.app.locals.pubClient
+    pubClient = req.app.locals.pubClient
     let sql = `
       DELETE FROM environments WHERE environments.environment_id = ? AND environments.user_id = ?
       `
@@ -205,20 +229,20 @@ LIMIT ?
         console.log(err)
 
       } else {
-        
-        if(result.affectedRows > 0 ){
-        let payload = {
-          type: "environment_deleted",
-          user: req.user,
-          data: result.affectedRows,
-          id: req.params.environment_id,
+
+        if (result.affectedRows > 0) {
+          let payload = {
+            type: "environment_deleted",
+            user: req.user,
+            data: result.affectedRows,
+            id: req.params.environment_id,
+          }
+
+          let str_payload = JSON.stringify(payload)
+          pubClient.publish(process.env.CHANNEL, str_payload)
+          res.send(result)
         }
-      
-        let str_payload = JSON.stringify(payload)
-        pubClient.publish(process.env.CHANNEL, str_payload)
-        res.send(result)
-        }
-      
+
       }
     })
   },

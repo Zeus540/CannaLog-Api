@@ -29,7 +29,7 @@ const allowedOrigins = ["http://localhost:5173","https://cannalog.co.za"]
 
 const io = new Server(server, {
 	cors: {
-		origin: allowedOrigins,
+		origin: true,
 		credentials: true
 	},
 	// cookie: {
@@ -58,7 +58,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(router)
 app.set('json spaces', 2)
-app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerFile))
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
 
 

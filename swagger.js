@@ -6,14 +6,14 @@ const doc = {
 
     info: {
         version: "1.0.0",
-        title: "Sweet Leaf API",
+        title: "CannaLog API",
         contact:{
             "name": "Creator",
             "url": "https://zaheerroberts.co.za",
             "email": "zaheerroberts4@gmail.com"
         },
        
-        description: "Set of API endpoints for recalling and manipulating the data relating to Sweet Leaf"
+        description: "Set of API endpoints for recalling and manipulating data relating to CannaLog"
     },
     host: process.env.SWAGGER_URL,
     basePath: "/",
@@ -34,9 +34,6 @@ const doc = {
        
         },
         {
-            "name": "Harvested Journals",
-        },
-        {
             "name": "Strains",
         
         },
@@ -52,25 +49,6 @@ const doc = {
             "name": "Smell Profiles",
             
         },
-        {
-            "name": "Journal Data",
-            
-        },
-        {
-            "name": "Journal Weeks",
-            
-        },
-        {
-            "name": "Journal Week Information",
-            
-        },
-        {
-            "name": "Journal Days",
-        },
-        {
-            "name": "Journal Notes",
-        },
-   
         {
             "name": "Germination Methods",
         },

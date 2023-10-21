@@ -317,7 +317,7 @@ module.exports = {
     // #swagger.tags = ['Plants']
     ...
     */
-  
+  console.log("starting getMyPlants")
     let limit = ''
     let orderBy = ''
 
@@ -414,9 +414,9 @@ module.exports = {
               has_more: has_more,
               total_count: total_count,
             };
-
+         
             res.send(paginated_result)
-
+            console.log("sent getMyPlants")
           }
         })
 

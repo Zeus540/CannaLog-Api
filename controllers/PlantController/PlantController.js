@@ -279,7 +279,7 @@ module.exports = {
   },
   getStrains: (req, res) => {
     /* ...
-    // #swagger.tags = ['Plants']
+    // #swagger.tags = ['Strains']
     ...
     */
     let sql = `
@@ -296,8 +296,8 @@ module.exports = {
     })
   },
   getStages: (req, res) => {
-    /* ...
-    // #swagger.tags = ['Plants']
+   /* ...
+    // #swagger.tags = ['Stages']
     ...
     */
     let sql = `
@@ -643,7 +643,10 @@ console.log("req.body.cover_thumbnail",req.body.cover_thumbnail)
 
   },
   get_detailed_plant_info_public: (req, res)=>{
-
+   /* ...
+      // #swagger.tags = ['Plants']
+      ...
+      */
     let plant_id = req.params.plant_id
    
     let getMyPlants_sql = `
@@ -689,7 +692,10 @@ ORDER BY
 
   },
   get_detailed_plant_info: (req, res)=>{
-
+   /* ...
+      // #swagger.tags = ['Plants']
+      ...
+      */
       let plant_id = req.params.plant_id
      
       let getMyPlants_sql = `

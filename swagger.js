@@ -52,7 +52,9 @@ const doc = {
         {
             "name": "Germination Methods",
         },
-       
+        {
+            "name": "Stages",
+        },
         
     ],
     securityDefinitions: {

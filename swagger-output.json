@@ -22,9 +22,6 @@
       "name": "Journals"
     },
     {
-      "name": "Harvested Journals"
-    },
-    {
       "name": "Strains"
     },
     {
@@ -35,21 +32,6 @@
     },
     {
       "name": "Smell Profiles"
-    },
-    {
-      "name": "Journal Data"
-    },
-    {
-      "name": "Journal Weeks"
-    },
-    {
-      "name": "Journal Week Information"
-    },
-    {
-      "name": "Journal Days"
-    },
-    {
-      "name": "Journal Notes"
     },
     {
       "name": "Germination Methods"
@@ -774,36 +756,15 @@
     },
     "/plants/my_plants": {
       "get": {
-        "tags": [
-          "Plants"
-        ],
         "description": "",
         "parameters": [
           {
             "name": "x-forwarded-for",
             "in": "header",
             "type": "string"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "type": "string"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "type": "string"
-          },
-          {
-            "name": "key_sort",
-            "in": "query",
-            "type": "string"
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "401": {
             "description": "Unauthorized"
           }

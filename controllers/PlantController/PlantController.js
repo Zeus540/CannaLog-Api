@@ -197,13 +197,33 @@ const { parse } = require('date-fns');
   }
 
 module.exports = {
-  getPublic: (req, res) => {
+  getPublic: async(req, res) => {
     /* ...
     // #swagger.tags = ['Plants']
     ...
     */
+
+    let limit = ''
+    let orderBy = ''
+
+    if (req.query.sort == undefined) {
+      orderBy = 'DESC'
+    } else {
+      orderBy = req.query.sort
+    }
+
+    if (req.query.limit == undefined) {
+      limit = ""
+    } else {
+      limit = parseInt(req.query.limit)
+    }
+    let key_sort = req.query.key_sort
     
-    let sql_public = `
+    let sql_public = ''
+
+    if (key_sort == "undefined") {
+
+    sql_public = `
     SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
     FROM users
     JOIN plants ON users.user_id = plants.user_id
@@ -225,24 +245,98 @@ module.exports = {
     plants.last_updated,
     plants.environment_id,
     environments.environment_name
-    ORDER BY plants.creation_date DESC
+    ORDER BY plants.creation_date ${orderBy}
+    LIMIT ${limit}
     `
+    }else{
+      sql_public = `
+      SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
+      FROM users
+      JOIN plants ON users.user_id = plants.user_id
+      JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
+      JOIN strains ON strains.strain_id = plants.plant_strain
+      JOIN environments ON environments.environment_id = plants.environment_id
+      LEFT JOIN plant_likes ON plants.plant_id = plant_likes.plant_id
+      LEFT JOIN plant_views ON plants.plant_id = plant_views.plant_id
+      WHERE plants.public = 1 AND plants.creation_date < ?
+      GROUP BY
+      users.user_name,
+      irrigation_types.irrigation_type,
+      strains.strain_name,
+      plants.plant_id,
+      plants.plant_name,
+      plants.cover_img,
+      plants.cover_thumbnail,
+      plants.creation_date,
+      plants.last_updated,
+      plants.environment_id,
+      environments.environment_name
+      ORDER BY plants.creation_date ${orderBy}
+      LIMIT ${limit}
+      `
+      
+    }
 
-    db.query(sql_public, (err, result, fields) => {
+   await db.query(sql_public,[`${key_sort}`], async(err, result_pagination, fields) => {
       if (err) {
         console.log(err)
       } else {
-        res.send(result)
+        let sql_pagination_total = `SELECT COUNT(*) AS total FROM plants WHERE plants.public = 1`
+    
+        await  db.query(sql_pagination_total, (err, result, fields) => {
+            if (err) {
+              console.log(err)
+  
+            } else {
+  
+              let next_cursor = result_pagination.length === limit ? result_pagination[result_pagination.length - 1]?.creation_date : null
+              let total_count = result[0].total
+              let has_more = result_pagination.length === limit;
+  
+              let paginated_result =
+              {
+                data: result_pagination,
+                next_cursor: next_cursor,
+                has_more: has_more,
+                total_count: total_count,
+              };
+           
+              res.send(paginated_result)
+   
+            }
+          })
+  
       }
     })
    
   },
-  getPublicSignedIn: (req, res) => {
+  getPublicSignedIn: async(req, res) => {
     /* ...
     // #swagger.tags = ['Plants']
     ...
     */
-    let sql = `
+
+    let limit = ''
+    let orderBy = ''
+
+    if (req.query.sort == undefined) {
+      orderBy = 'DESC'
+    } else {
+      orderBy = req.query.sort
+    }
+
+    if (req.query.limit == undefined) {
+      limit = ""
+    } else {
+      limit = parseInt(req.query.limit)
+    }
+    let key_sort = req.query.key_sort
+    
+    let sql = ''
+
+    if (key_sort == "undefined") {
+
+    sql = `
     SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
     FROM users
     JOIN plants ON users.user_id = plants.user_id
@@ -265,29 +359,83 @@ module.exports = {
     plants.last_updated,
     plants.environment_id,
     environments.environment_name
-    ORDER BY plants.creation_date DESC
+    ORDER BY plants.creation_date ${orderBy}
+    LIMIT ${limit}
     `
+    }else{
+      sql = `
+      SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
+      FROM users
+      JOIN plants ON users.user_id = plants.user_id
+      JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
+      JOIN strains ON strains.strain_id = plants.plant_strain
+      JOIN environments ON environments.environment_id = plants.environment_id
+      LEFT JOIN plant_likes ON plants.plant_id = plant_likes.plant_id
+      LEFT JOIN plant_views ON plants.plant_id = plant_views.plant_id
+      WHERE plants.public = 1 AND plants.user_id != ? AND plants.creation_date < ? 
+      GROUP BY
+      users.user_name,
+      irrigation_types.irrigation_type,
+      strains.strain_name,
+      plants.plant_id,
+      plants.plant_name,
+      plants.cover_img,
+      plants.cover_thumbnail,
+      plants.creation_date,
+      plants.last_updated,
+      plants.environment_id,
+      environments.environment_name
+      ORDER BY plants.creation_date ${orderBy}
+      LIMIT ${limit}
+      `
+ 
+    }
 
-    db.query(sql,[req.user.user_id], (err, result, fields) => {
+    await  db.query(sql,[req.user.user_id,`${key_sort}`], async(err, result_pagination, fields) => {
       if (err) {
         console.log(err)
       } else {
-        res.send(result)
+        
+        let sql_pagination_total = `SELECT COUNT(*) AS total FROM plants WHERE plants.public = 1 AND plants.user_id != ?`
+    
+      await  db.query(sql_pagination_total, [req.user.user_id], (err, result, fields) => {
+          if (err) {
+            console.log(err)
+
+          } else {
+
+            let next_cursor = result_pagination.length === limit ? result_pagination[result_pagination.length - 1]?.creation_date : null
+            let total_count = result[0].total
+            let has_more = result_pagination.length === limit;
+
+            let paginated_result =
+            {
+              data: result_pagination,
+              next_cursor: next_cursor,
+              has_more: has_more,
+              total_count: total_count,
+            };
+         
+            res.send(paginated_result)
+ 
+          }
+        })
+
       }
     })
    
   },
-  getStrains: (req, res) => {
-    /* ...
-    // #swagger.tags = ['Strains']
-    ...
-    */
-    let sql = `
+  getStrains: async(req, res) => {
+  /* ...
+  // #swagger.tags = ['Strains']
+  ...
+  */
+  let sql = `
             SELECT * FROM strains
             ORDER BY strains.strain_name
             `
 
-    db.query(sql, (err, result, fields) => {
+  await db.query(sql, (err, result, fields) => {
       if (err) {
         console.log(err)
       } else {
@@ -295,7 +443,7 @@ module.exports = {
       }
     })
   },
-  getStages: (req, res) => {
+  getStages: async(req, res) => {
    /* ...
     // #swagger.tags = ['Stages']
     ...
@@ -304,7 +452,7 @@ module.exports = {
             SELECT * FROM stages
             `
 
-    db.query(sql, (err, result, fields) => {
+   await db.query(sql, (err, result, fields) => {
       if (err) {
         console.log(err)
       } else {
@@ -337,32 +485,32 @@ module.exports = {
     let getMyPlants_sql = ''
 
     if (key_sort == "undefined") {
-    getMyPlants_sql = `
-    SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
-    FROM users
-    JOIN plants ON users.user_id = plants.user_id
-    JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
-    JOIN strains ON strains.strain_id = plants.plant_strain
-    JOIN environments ON environments.environment_id = plants.environment_id
-    LEFT JOIN plant_likes ON plants.plant_id = plant_likes.plant_id
-    LEFT JOIN plant_views ON plants.plant_id = plant_views.plant_id
-    WHERE plants.user_id = ?
-    GROUP BY
-    users.user_name,
-    irrigation_types.irrigation_type,
-    strains.strain_name,
-    plants.plant_id,
-    plants.plant_name,
-    plants.cover_img,
-    plants.cover_thumbnail,
-    plants.creation_date,
-    plants.last_updated,
-    plants.environment_id,
-    environments.environment_name
-    ORDER BY plants.creation_date ${orderBy}
-    LIMIT ${limit}
-    `
-    }else{
+      getMyPlants_sql = `
+      SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
+      FROM users
+      JOIN plants ON users.user_id = plants.user_id
+      JOIN irrigation_types ON irrigation_types.irrigation_type_id = plants.irrigation_type
+      JOIN strains ON strains.strain_id = plants.plant_strain
+      JOIN environments ON environments.environment_id = plants.environment_id
+      LEFT JOIN plant_likes ON plants.plant_id = plant_likes.plant_id
+      LEFT JOIN plant_views ON plants.plant_id = plant_views.plant_id
+      WHERE plants.user_id = ?
+      GROUP BY
+      users.user_name,
+      irrigation_types.irrigation_type,
+      strains.strain_name,
+      plants.plant_id,
+      plants.plant_name,
+      plants.cover_img,
+      plants.cover_thumbnail,
+      plants.creation_date,
+      plants.last_updated,
+      plants.environment_id,
+      environments.environment_name
+      ORDER BY plants.creation_date ${orderBy}
+      LIMIT ${limit}
+      `
+      }else{
       getMyPlants_sql = `
       SELECT users.user_name,users.user_id, irrigation_types.irrigation_type, strains.strain_name, plants.plant_id, plants.plant_name,plants.cover_img,plants.cover_thumbnail,DATE_FORMAT(plants.creation_date, '%Y-%m-%dT%H:%i:%sZ') AS creation_date,plants.last_updated,plants.environment_id,environments.environment_name,COUNT(plant_likes.plant_like_id) AS likes,COUNT(plant_views.plant_view_id) AS views
       FROM users

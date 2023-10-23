@@ -98,7 +98,13 @@ LIMIT ${limit}
 
             let next_cursor = result_pagination.length === limit ? result_pagination[result_pagination.length - 1]?.creation_date : null
             let total_count = result[0].total
-            let has_more = result_pagination.length === limit;
+            let has_more;
+            if(result_pagination.length === total_count){
+              has_more = false;
+            }else{
+              has_more = result_pagination.length === limit;
+            }
+       
 
             let paginated_result =
             {

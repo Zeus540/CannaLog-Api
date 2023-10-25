@@ -49,14 +49,14 @@ router.post('/', (req, res) => {
     //Get user
     db.query(`select * from users WHERE user_email = ?`, [email], (err, result, fields) => {
       try {
-        let User = result[0]
+        let user = result[0]
 
-        if (User == undefined) {
-          console.log("User", undefined)
+        if (user == undefined) {
+          console.log("user", undefined)
           res.status(500).send("Account doesnt exist")
         } else {
       
-          bcrypt.compare(password, User.user_password, (err, result) => {
+          bcrypt.compare(password, user.user_password, (err, result) => {
             if (err) {
 
             } else {
@@ -64,14 +64,15 @@ router.post('/', (req, res) => {
               if (result === true) {
 
                 UserObj = {
-                  user_id: User.user_id,
-                  user_name: User.user_name,
-                  user_email: User.user_email,
+                  user_id: user.user_id,
+                  user_name: user.user_name,
+                  user_email: user.user_email,
                 }
 
                 UserObjCleaned = {
-                  user_name: User.user_name,
-                  acc_type: User.user_acc_type
+                  user_id: user.user_id,
+                  user_name: user.user_name,
+                  acc_type: user.user_acc_type
                 }
               
              

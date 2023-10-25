@@ -16,7 +16,7 @@ function authenticateToken(req, res, next) {
   const refresh_token = req.cookies['session_refresh']
 
   if (token == undefined && refresh_token == undefined) {
-
+    res.clearCookie("user")
     res.clearCookie("session")
     res.clearCookie("session_refresh")
     res.sendStatus(401)
@@ -43,6 +43,7 @@ function authenticateToken(req, res, next) {
             }
 
             let userCleanedToken = {
+              user_id: user.user_id,
               user_name: user.user_name,
               user_email: user.user_email,
             }
@@ -85,6 +86,7 @@ function authenticateToken(req, res, next) {
         } else {
           
           blacklisted.push(refresh_token)
+          res.clearCookie("user")
           res.clearCookie("session")
           res.clearCookie("session_refresh")
           res.sendStatus(401)
@@ -174,6 +176,7 @@ function authenticateToken(req, res, next) {
           } else {
             
             blacklisted.push(refresh_token)
+            res.clearCookie("user")
             res.clearCookie("session")
             res.clearCookie("session_refresh")
             res.sendStatus(401)

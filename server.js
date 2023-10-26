@@ -56,7 +56,7 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.json());
-
+app.use(compression())
 app.use(router)
 app.set('json spaces', 2)
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerFile))

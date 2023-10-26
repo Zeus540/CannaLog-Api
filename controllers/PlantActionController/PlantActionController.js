@@ -55,27 +55,27 @@ const resizeAndUploadImage = async (originalPath, originalFileName, sizes, forma
       if (format === "webp") {
 
         await sharpObject
-          .rotate() // Keep the image rotation
+          .rotate() 
           .withMetadata()
           .toFormat(format)
-          .webp({ quality: 40, reductionEffort: 80, }) // Adjust the quality value as desired (0-100)
+          .webp({ quality: 40, reductionEffort: 80, }) 
           .toFile("./tmp/" + originalFileNameFull);
 
       } else if (format === "jpg") {
         await sharpObject
-          .rotate() // Keep the image rotation
+          .rotate() 
           .withMetadata()
           .toFormat(format)
-          .flatten({ background: { r: 255, g: 255, b: 255 } }) // Specify the background color as desired (white in this example)
-          .jpeg({ quality: 50 }) // Adjust the quality value as desired (0-100)
+          .flatten({ background: { r: 255, g: 255, b: 255 } }) 
+          .jpeg({ quality: 50 }) 
           .toFile("./tmp/" + originalFileNameFull);
       } else if (format === "png") {
         await sharpObject
-          .rotate() // Keep the image rotation
+          .rotate() 
           .withMetadata()
           .toFormat(format)
-          .flatten({ background: { r: 255, g: 255, b: 255 } }) // Specify the background color as desired (white in this example)
-          .jpeg({ quality: 50 }) // Adjust the quality value as desired (0-100)
+          .flatten({ background: { r: 255, g: 255, b: 255 } }) 
+          .jpeg({ quality: 50 }) 
           .toFile("./tmp/" + originalFileNameFull);
       }
 

@@ -17,7 +17,7 @@ const swaggerFile = require('./swagger-output.json')
 const router = require('./routes')
 const db = require('./lib/db');
 require('dotenv').config()
-
+const compression = require("compression");
 
 const pubClient = createClient({ url: 'redis://95.111.252.42:6380' });
 const subClient = pubClient.duplicate();
@@ -56,6 +56,7 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.json());
+app.use(compression())
 app.use(router)
 app.set('json spaces', 2)
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerFile))
@@ -63,7 +64,7 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
 
  //Websocket Connections
- io.on('connection', (socket, req) => {
+ io.on('connection', async(socket, req) => {
 
 
  	 const yourCookieValue = socket.request.headers.cookie
@@ -74,13 +75,13 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerFile))
  	 let jwt_token = yourCookieValue?.split("=")[1]
 	 
  	 if (jwt_token !== undefined) {
- 	 	jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET, async (err, user) => {
+		await jwt.verify(jwt_token, process.env.TOKEN_REFRESH_SECRET,  async(err, user) => {
 
  	 		let sql = `
  	 	UPDATE users
  	 	SET is_logged_in = 1
  	 	WHERE user_id = ?`
- 	 		db.query(sql, [await user?.user_id], (err, result, fields) => {
+ 	 	await db.query(sql, [ user?.user_id], (err, result, fields) => {
  	 			if (err) {
  	 				console.log(err)
 

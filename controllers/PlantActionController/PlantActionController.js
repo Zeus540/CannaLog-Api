@@ -240,35 +240,12 @@ module.exports = {
     
       case "1":
         sql = `
-        SELECT 
-        plant_feeding.plant_feeding_id,
-        plant_feeding.plant_id,
-        plant_feeding.user_id,
-        plant_feeding.plant_action_id,
-        plant_feeding.nutrient_amount,
-        DATE_FORMAT(plant_feeding.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,
-        nutrient_options.nutrient_name,
-        measurement_units.measurement_unit_id,
-        measurement_units.measurement_unit,
-        NULL AS water_amount,
-        NULL AS water_amount_measurement
-    FROM 
-        plant_feeding
-    JOIN
-        nutrient_options ON plant_feeding.nutrient_id = nutrient_options.nutrient_id
-    JOIN
-        measurement_units ON plant_feeding.nutrient_measurement = measurement_units.measurement_unit_id
-    WHERE 
-        plant_feeding.plant_id = ?
-    UNION
-    SELECT
-        NULL AS plant_feeding_id,
+        SELECT
+        plant_watering.plant_watering_id ,
         plant_watering.plant_id,
-        NULL AS user_id,
+        plant_watering.user_id,
         plant_watering.plant_action_id,
-        NULL AS nutrient_amount,
         DATE_FORMAT(plant_watering.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,
-        NULL AS nutrient_name,
         measurement_units.measurement_unit_id,
         measurement_units.measurement_unit,
         plant_watering.water_amount,
@@ -281,7 +258,7 @@ module.exports = {
         plant_watering.plant_id = ?;
     
               `
-        db.query(sql, [req.params.plant_id,req.params.plant_id], (err, result, fields) => {
+        db.query(sql, [req.params.plant_id], (err, result, fields) => {
           if (err) {
             console.log(err)
           } else {
@@ -290,6 +267,39 @@ module.exports = {
         })
 
         break;
+      
+      case "2":
+          sql = `
+          SELECT 
+          plant_feeding.plant_feeding_id,
+          plant_feeding.plant_id,
+          plant_feeding.user_id,
+          plant_feeding.plant_action_id,
+          plant_feeding.nutrient_amount,
+          DATE_FORMAT(plant_feeding.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,
+          nutrient_options.nutrient_name,
+          measurement_units.measurement_unit_id,
+          measurement_units.measurement_unit
+      FROM 
+          plant_feeding
+      JOIN
+          nutrient_options ON plant_feeding.nutrient_id = nutrient_options.nutrient_id
+      JOIN
+          measurement_units ON plant_feeding.nutrient_measurement = measurement_units.measurement_unit_id
+      WHERE 
+          plant_feeding.plant_id = ?;
+      
+                `
+          db.query(sql, [req.params.plant_id], (err, result, fields) => {
+            if (err) {
+              console.log(err)
+            } else {
+              res.send(result)
+            }
+          })
+  
+          break;
+      
       default:
         break;
     }
@@ -301,18 +311,12 @@ module.exports = {
     pubClient = req.app.locals.pubClient
 
     let time_zone = req.body.timezone
-    // Parse the user-submitted date string in the user's timezone
 
-    console.log("time_zone",time_zone)
-    console.log("req.body.creation_date",req.body.creation_date)
     const userDate = parse(req.body.creation_date, 'yyyy-MM-dd HH:mm:ss', new Date(), { timeZone: time_zone });
-    console.log("userDate",userDate)
-    // Convert the user's local date to UTC
+
     const utcDate = zonedTimeToUtc(userDate, time_zone);
 
-    // Format the UTC date as a string
     const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
-
 
 
     switch (parseInt(req.params.type)) {
@@ -567,42 +571,8 @@ module.exports = {
 
       case 1:
 
-        function insert_feeding_action(req, res, connection, prev_result) {
-
-            for (let index = 0; index < req.body.nutrient_list.length; index++) {
-              const element = req.body.nutrient_list[index];
-
-              insert_feeding_action_multi_sql = `
-              INSERT INTO plant_feeding (plant_action_id, user_id,plant_id,nutrient_id,nutrient_amount,nutrient_measurement, creation_date,last_updated) 
-              VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},${element.nutrient_id},${element.nutrient_amount},${element.nutrient_measurement}, '${utcTimestamp}','${utcTimestamp}')`
-
-
-              db.query(insert_feeding_action_multi_sql, (err, result, fields) => {
-                if (err) {
-                  console.log(err)
-                  rollback(connection, res);
-                } else {
-                  if (index == req.body.nutrient_list.length - 1) {
-                    let payload = {
-                      type: "feeding_added",
-                      user: req.user,
-                      plant_id:req.body.plant_id,
-                      data: result.insertId
-                    }
-     
-                    let str_payload = JSON.stringify(payload)
-                    pubClient.publish(process.env.CHANNEL, str_payload)
-
-                    commit(connection, res, result);
-                 
-                  }
-                }
-              })
-
-            }
-        }
         function insert_watering_action(req, res, connection, prev_result){
-          
+         
           insert_feeding_action_sql = `
           INSERT INTO plant_watering (plant_action_id, user_id,plant_id,water_amount,water_amount_measurement, creation_date,last_updated) 
           VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},"${req.body.water_amount}",${req.body.water_amount_measurement},'${utcTimestamp}','${utcTimestamp}')`
@@ -615,28 +585,25 @@ module.exports = {
 
               
 
-              if(req.body.nutrient_list.length > 0){
-              
-                insert_feeding_action(req, res, connection, prev_result)
-              }else{
-                let payload = {
-                  type: "watering_added",
-                  user: req.user,
-                  plant_id:req.body.plant_id,
-                  data: result.insertId
-                }
- 
-                let str_payload = JSON.stringify(payload)
-                pubClient.publish(process.env.CHANNEL, str_payload)
-
-                commit(connection, res, prev_result, result);
+              let payload = {
+                type: "watering_added",
+                user: req.user,
+                plant_id:req.body.plant_id,
+                data: result.insertId
               }
+
+              let str_payload = JSON.stringify(payload)
+              pubClient.publish(process.env.CHANNEL, str_payload)
+
+              commit(connection, res, result,);
 
             }
           })
         }
 
-        function insert_action_feeding(req, res, connection) {
+        function insert_action_watering(req, res, connection) {
+          console.log("insert_action_feeding",req.body)
+          
           sql = `INSERT INTO plant_actions (plant_id, user_id, plant_action_type_id, creation_date) VALUES (${req.body.plant_id},${req.user.user_id},${req.body.plant_action_type_id},'${utcTimestamp}')`
 
           db.query(sql, (err, result, fields) => {
@@ -644,7 +611,7 @@ module.exports = {
               console.log(err)
               rollback(connection, res);
             } else {
-
+              
               let payload = {
                 type: "action_taken",
                 user: req.user,
@@ -676,18 +643,174 @@ module.exports = {
               return;
             }
 
+           
+            insert_action_watering(req, res, connection);
+            console.log("called insert_action_watering",req.body)
+          });
+
+        });
+
+      break;
+    
+      case 2:
+
+      function insert_feeding_action(req, res, connection, prev_result) {
+
+          for (let index = 0; index < req.body.nutrient_list.length; index++) {
+            const element = req.body.nutrient_list[index];
+
+            insert_feeding_action_multi_sql = `
+            INSERT INTO plant_feeding (plant_action_id, user_id,plant_id,nutrient_id,nutrient_amount,nutrient_measurement, creation_date,last_updated) 
+            VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},${element.nutrient_id},${element.nutrient_amount},${element.nutrient_measurement}, '${utcTimestamp}','${utcTimestamp}')`
+
+
+            db.query(insert_feeding_action_multi_sql, (err, result, fields) => {
+              if (err) {
+                console.log(err)
+                rollback(connection, res);
+              } else {
+                if (index == req.body.nutrient_list.length - 1) {
+                  let payload = {
+                    type: "feeding_added",
+                    user: req.user,
+                    plant_id:req.body.plant_id,
+                    data: result.insertId
+                  }
+   
+                  let str_payload = JSON.stringify(payload)
+                  pubClient.publish(process.env.CHANNEL, str_payload)
+
+                  commit(connection, res, result);
+               
+                }
+              }
+            })
+
+          }
+      }
+  
+
+      function insert_action_feeding(req, res, connection) {
+        sql = `INSERT INTO plant_actions (plant_id, user_id, plant_action_type_id, creation_date) VALUES (${req.body.plant_id},${req.user.user_id},${req.body.plant_action_type_id},'${utcTimestamp}')`
+
+        db.query(sql, (err, result, fields) => {
+          if (err) {
+            console.log(err)
+            rollback(connection, res);
+          } else {
+
+            let payload = {
+              type: "action_taken",
+              user: req.user,
+              plant_id: req.body.plant_id,
+              data: result.insertId
+            }
+
+            let str_payload = JSON.stringify(payload)
+            pubClient.publish(process.env.CHANNEL, str_payload)
+
+            insert_feeding_action(req, res, connection, result)
+
+          }
+        })
+
+      }
+      
+      db.getConnection((error, connection) => {
+        if (error) {
+          console.error('Error acquiring connection from the pool: ', error);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+        }
+        
+        connection.beginTransaction((error) => {
+          if (error) {
+            console.error('Error starting the transaction: ', error);
+            releaseConnectionAndRespond(connection, res, 500, 'Internal server error');
+            return;
+          }
+
+          
+          insert_action_feeding(req, res, connection);
+
+        });
+
+      });
+    break;
+    
+    }
+  },
+  editAction:(req,res) =>{
+
+    pubClient = req.app.locals.pubClient
+
+    let time_zone = req.body.timezone
+
+    const userDate = parse(req.body.creation_date, 'yyyy-MM-dd HH:mm:ss', new Date(), { timeZone: time_zone });
+
+    const utcDate = zonedTimeToUtc(userDate, time_zone);
+
+    const utcTimestamp = format(utcDate, 'yyyy-MM-dd HH:mm:ss', { timeZone: 'Etc/UTC' });
+
+
+    switch (parseInt(req.params.type)) {
+
+      case 13:
+        function edit_note_action(req, res, connection) {
+         
+          edit_note_action_sql = `
+          UPDATE plant_notes
+          SET plant_notes.plant_note = ?
+          WHERE plant_notes.plant_action_id = ? AND plant_notes.user_id = ?
+          `
+     
+          db.query(edit_note_action_sql,[req.body.plant_note,req.body.plant_action_id,req.user.user_id], (err, result, fields) => {
+            if (err) {
+              console.log(err)
+              rollback(connection, res);
+            } else {
+           
+               let payload = {
+                 type: "note_edited",
+                 user: req.user,
+                 plant_id: req.body.plant_id,
+                 data: req.body.plant_note_id
+               }
+
+               console.log("payload",payload)
+               let str_payload = JSON.stringify(payload)
+               pubClient.publish(process.env.CHANNEL, str_payload)
+              commit(connection, res, result);
+
+            }
+          })
+
+        }
+      
+
+        db.getConnection((error, connection) => {
+          if (error) {
+            console.error('Error acquiring connection from the pool: ', error);
+            res.status(500).json({ error: 'Internal server error' });
+            return;
+          }
+          
+          connection.beginTransaction((error) => {
+            if (error) {
+              console.error('Error starting the transaction: ', error);
+              releaseConnectionAndRespond(connection, res, 500, 'Internal server error');
+              return;
+            }
+
             
-            insert_action_feeding(req, res, connection);
+            edit_note_action(req, res, connection);
 
           });
 
         });
-      break;
-
-
+      break
     }
   },
-
   deleteAction: (req, res) => {
     pubClient = req.app.locals.pubClient
 
@@ -696,7 +819,6 @@ module.exports = {
     db.query(deleteAction_sql, [req.params.plant_action_id, req.user.user_id], (err, result, fields) => {
       if (err) {
         console.log(err)
-        rollback(connection, res);
       } else {
 
         let payload = {

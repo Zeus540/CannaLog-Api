@@ -25,7 +25,7 @@ const subClient = pubClient.duplicate();
 pubClient.connect()
 subClient.connect()
 
-const allowedOrigins = ["http://localhost:5173","https://cannalog.co.za"]
+const allowedOrigins = ["http://localhost:5173","https://cannalog.co.za","http://localhost:4173"]
 
 const io = new Server(server, {
 	cors: {
@@ -283,6 +283,24 @@ WHERE
 				io.local.emit(`note_added${payload.plant_id}`, result[0])
 			}
 			})
+			break;
+
+			case "note_edited":
+
+			let note_edited_sql = `
+			SELECT plant_note_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
+			WHERE plant_notes.plant_id = ?
+
+			`
+		
+			db.query(note_edited_sql, [payload.plant_id], (err, result, fields) => {
+			if (err) {
+				console.log(err)
+			} else {
+				io.local.emit(`note_edited${payload.plant_id}`, result)
+			}
+			})
+
 		
 			break;
 
@@ -308,35 +326,12 @@ WHERE
 
 		
 			watering_added_sql = `
-			SELECT 
-			plant_feeding.plant_feeding_id,
-			plant_feeding.plant_id,
-			plant_feeding.user_id,
-			plant_feeding.plant_action_id,
-			plant_feeding.nutrient_amount,
-			DATE_FORMAT(plant_feeding.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,
-			nutrient_options.nutrient_name,
-			measurement_units.measurement_unit_id,
-			measurement_units.measurement_unit,
-			NULL AS water_amount,
-			NULL AS water_amount_measurement
-		FROM 
-			plant_feeding
-		JOIN
-			nutrient_options ON plant_feeding.nutrient_id = nutrient_options.nutrient_id
-		JOIN
-			measurement_units ON plant_feeding.nutrient_measurement = measurement_units.measurement_unit_id
-		WHERE 
-			plant_feeding.plant_id = ?
-		UNION
-		SELECT
-			NULL AS plant_feeding_id,
+			SELECT
+			plant_watering.plant_watering_id ,
 			plant_watering.plant_id,
-			NULL AS user_id,
+			plant_watering.user_id,
 			plant_watering.plant_action_id,
-			NULL AS nutrient_amount,
 			DATE_FORMAT(plant_watering.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,
-			NULL AS nutrient_name,
 			measurement_units.measurement_unit_id,
 			measurement_units.measurement_unit,
 			plant_watering.water_amount,
@@ -346,14 +341,15 @@ WHERE
 		JOIN
 			measurement_units ON plant_watering.water_amount_measurement = measurement_units.measurement_unit_id
 		WHERE 
-			plant_watering.plant_id = ?;
+			plant_watering.plant_watering_id = ?;
 		
 				  `
-			db.query(watering_added_sql, [payload.plant_id,payload.plant_id], (err, result, fields) => {
+			db.query(watering_added_sql, [payload.data], (err, result, fields) => {
 			  if (err) {
 				console.log(err)
 			  } else {
-				io.local.emit(`watering_added${payload.plant_id}`, result)
+				console.log("result",result)
+				io.local.emit(`watering_added${payload.plant_id}`, result[0])
 			  }
 			})
 		
@@ -372,9 +368,7 @@ WHERE
 			DATE_FORMAT(plant_feeding.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,
 			nutrient_options.nutrient_name,
 			measurement_units.measurement_unit_id,
-			measurement_units.measurement_unit,
-			NULL AS water_amount,
-			NULL AS water_amount_measurement
+			measurement_units.measurement_unit
 		FROM 
 			plant_feeding
 		JOIN
@@ -382,33 +376,14 @@ WHERE
 		JOIN
 			measurement_units ON plant_feeding.nutrient_measurement = measurement_units.measurement_unit_id
 		WHERE 
-			plant_feeding.plant_id = ?
-		UNION
-		SELECT
-			NULL AS plant_feeding_id,
-			plant_watering.plant_id,
-			NULL AS user_id,
-			plant_watering.plant_action_id,
-			NULL AS nutrient_amount,
-			DATE_FORMAT(plant_watering.creation_date, "%Y-%m-%dT%H:%i:%sZ") AS creation_date,
-			NULL AS nutrient_name,
-			measurement_units.measurement_unit_id,
-			measurement_units.measurement_unit,
-			plant_watering.water_amount,
-			plant_watering.water_amount_measurement
-		FROM
-			plant_watering
-		JOIN
-			measurement_units ON plant_watering.water_amount_measurement = measurement_units.measurement_unit_id
-		WHERE 
-			plant_watering.plant_id = ?;
+			plant_feeding.plant_feeding_id = ?
 		
 				  `
-			db.query(feeding_added_sql, [payload.plant_id,payload.plant_id], (err, result, fields) => {
+			db.query(feeding_added_sql, [payload.data], (err, result, fields) => {
 			  if (err) {
 				console.log(err)
 			  } else {
-				io.local.emit(`feeding_added${payload.plant_id}`, result)
+				io.local.emit(`feeding_added${payload.plant_id}`, result[0])
 			  }
 			})
 		

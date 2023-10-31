@@ -26,6 +26,7 @@ router.post('/actions',authenticateToken,  PlantActionController.get_actions);
 router.post('/actions/public', PlantActionController.get_actions_public);
 router.post('/actions/:type/:plant_id?', PlantActionController.getActionDataByType);
 router.post('/take_action/:type', authenticateToken, upload.single("file"), PlantActionController.takeAction);
+router.patch('/:plant_id/edit_action/:type', authenticateToken, PlantActionController.editAction);
 router.delete('/:plant_id/delete_action/:plant_action_id', authenticateToken, PlantActionController.deleteAction);
 
 // Plant Information

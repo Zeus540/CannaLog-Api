@@ -271,7 +271,7 @@ WHERE
 			case "note_added":
 
 			let note_added_sql = `
-			SELECT plant_note_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
+			SELECT plant_note_id,plant_action_type_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
 			WHERE plant_notes.plant_note_id = ?
 
 			`
@@ -288,7 +288,7 @@ WHERE
 			case "note_edited":
 
 			let note_edited_sql = `
-			SELECT plant_note_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
+			SELECT plant_note_id,plant_action_type_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
 			WHERE plant_notes.plant_id = ?
 
 			`
@@ -307,7 +307,7 @@ WHERE
 			case "image_added":
 
 			let image_added_sql = `
-			SELECT plant_image_id,plant_id,user_id,plant_action_id,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,full_img,full_img_next_gen,DATE_FORMAT(creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date FROM plant_images
+			SELECT plant_image_id,plant_action_type_id,plant_id,user_id,plant_action_id,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,full_img,full_img_next_gen,DATE_FORMAT(creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date FROM plant_images
             WHERE plant_images.plant_image_id = ?
            
 			`
@@ -328,6 +328,7 @@ WHERE
 			watering_added_sql = `
 			SELECT
 			plant_watering.plant_watering_id ,
+			plant_watering.plant_action_type_id,
 			plant_watering.plant_id,
 			plant_watering.user_id,
 			plant_watering.plant_action_id,
@@ -361,6 +362,7 @@ WHERE
 			feeding_added_sql = `
 			SELECT 
 			plant_feeding.plant_feeding_id,
+			plant_feeding.plant_action_type_id,
 			plant_feeding.plant_id,
 			plant_feeding.user_id,
 			plant_feeding.plant_action_id,
@@ -376,14 +378,15 @@ WHERE
 		JOIN
 			measurement_units ON plant_feeding.nutrient_measurement = measurement_units.measurement_unit_id
 		WHERE 
-			plant_feeding.plant_feeding_id = ?
+			plant_feeding.plant_action_id = ?
 		
 				  `
 			db.query(feeding_added_sql, [payload.data], (err, result, fields) => {
 			  if (err) {
 				console.log(err)
 			  } else {
-				io.local.emit(`feeding_added${payload.plant_id}`, result[0])
+				console.log("result",result)
+				io.local.emit(`feeding_added${payload.plant_id}`, result)
 			  }
 			})
 		

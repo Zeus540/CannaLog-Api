@@ -208,7 +208,7 @@ module.exports = {
 
       case "13":
         sql = `
-          SELECT plant_note_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
+          SELECT plant_note_id,plant_action_type_id,plant_id,user_id,plant_action_id,plant_note,DATE_FORMAT(plant_notes.creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date,last_updated FROM plant_notes
           WHERE plant_notes.plant_id = ?
           ORDER BY creation_date DESC
           `
@@ -224,7 +224,7 @@ module.exports = {
 
       case "4":
         sql = `
-            SELECT plant_image_id,plant_id,user_id,plant_action_id,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,full_img,full_img_next_gen,DATE_FORMAT(creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date FROM plant_images
+            SELECT plant_image_id,plant_action_type_id,plant_id,user_id,plant_action_id,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,full_img,full_img_next_gen,DATE_FORMAT(creation_date, "%Y-%m-%dT%H:%i:%sZ") as creation_date FROM plant_images
             WHERE plant_images.plant_id = ?
             ORDER BY creation_date DESC
             `
@@ -242,6 +242,7 @@ module.exports = {
         sql = `
         SELECT
         plant_watering.plant_watering_id ,
+        plant_watering.plant_action_type_id,
         plant_watering.plant_id,
         plant_watering.user_id,
         plant_watering.plant_action_id,
@@ -272,6 +273,7 @@ module.exports = {
           sql = `
           SELECT 
           plant_feeding.plant_feeding_id,
+          plant_feeding.plant_action_type_id,
           plant_feeding.plant_id,
           plant_feeding.user_id,
           plant_feeding.plant_action_id,
@@ -397,8 +399,8 @@ module.exports = {
       case 13:
         function insert_note_action(req, res, connection, prev_result) {
           insert_note_action_sql = `
-            INSERT INTO plant_notes (plant_action_id, user_id,plant_id,plant_note, creation_date,last_updated) 
-            VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},"${req.body.plant_note}",'${utcTimestamp}','${utcTimestamp}')`
+            INSERT INTO plant_notes (plant_action_id,plant_action_type_id, user_id,plant_id,plant_note, creation_date,last_updated) 
+            VALUES (${prev_result.insertId},${req.body.plant_action_type_id},${req.user.user_id},${req.body.plant_id},"${req.body.plant_note}",'${utcTimestamp}','${utcTimestamp}')`
 
           db.query(insert_note_action_sql, (err, result, fields) => {
             if (err) {
@@ -509,9 +511,9 @@ module.exports = {
                 let nexGen = originalFileName.split(".")[0]
 
                 sqlInsertPlantData = `
-                INSERT INTO plant_images (full_img,full_img_next_gen,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,plant_id, plant_action_id, user_id,creation_date) 
+                INSERT INTO plant_images (full_img,full_img_next_gen,thumbnail_img,thumbnail_img_next_gen,mid_img,mid_img_next_gen,plant_id, plant_action_id,plant_action_type_id, user_id,creation_date) 
                 VALUES 
-                ("https://s3.cannalog.co.za/sweetleaf/${"full-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${"full-" + nexGen + ".webp"}","https://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + nexGen + ".webp"}","https://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + nexGen + ".webp"}",${req.body.plant_id},${result.insertId},${req.user.user_id},'${utcTimestamp}')`
+                ("https://s3.cannalog.co.za/sweetleaf/${"full-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${"full-" + nexGen + ".webp"}","https://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${sizes[0].width + "x" + sizes[0].height + "-" + nexGen + ".webp"}","https://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + originalFileName}","https://s3.cannalog.co.za/sweetleaf/${sizes[1].width + "x" + sizes[1].height + "-" + nexGen + ".webp"}",${req.body.plant_id},${result.insertId},${req.body.plant_action_type_id},${req.user.user_id},'${utcTimestamp}')`
 
                 await db.query(sqlInsertPlantData, (err, result, fields) => {
                   if (err) {
@@ -574,8 +576,8 @@ module.exports = {
         function insert_watering_action(req, res, connection, prev_result){
          
           insert_feeding_action_sql = `
-          INSERT INTO plant_watering (plant_action_id, user_id,plant_id,water_amount,water_amount_measurement, creation_date,last_updated) 
-          VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},"${req.body.water_amount}",${req.body.water_amount_measurement},'${utcTimestamp}','${utcTimestamp}')`
+          INSERT INTO plant_watering (plant_action_id,plant_action_type_id, user_id,plant_id,water_amount,water_amount_measurement, creation_date,last_updated) 
+          VALUES (${prev_result.insertId},${req.body.plant_action_type_id},${req.user.user_id},${req.body.plant_id},"${req.body.water_amount}",${req.body.water_amount_measurement},'${utcTimestamp}','${utcTimestamp}')`
 
           db.query(insert_feeding_action_sql, (err, result, fields) => {
             if (err) {
@@ -660,8 +662,8 @@ module.exports = {
             const element = req.body.nutrient_list[index];
 
             insert_feeding_action_multi_sql = `
-            INSERT INTO plant_feeding (plant_action_id, user_id,plant_id,nutrient_id,nutrient_amount,nutrient_measurement, creation_date,last_updated) 
-            VALUES (${prev_result.insertId},${req.user.user_id},${req.body.plant_id},${element.nutrient_id},${element.nutrient_amount},${element.nutrient_measurement}, '${utcTimestamp}','${utcTimestamp}')`
+            INSERT INTO plant_feeding (plant_action_id,plant_action_type_id, user_id,plant_id,nutrient_id,nutrient_amount,nutrient_measurement, creation_date,last_updated) 
+            VALUES (${prev_result.insertId},${req.body.plant_action_type_id},${req.user.user_id},${req.body.plant_id},${element.nutrient_id},${element.nutrient_amount},${element.nutrient_measurement}, '${utcTimestamp}','${utcTimestamp}')`
 
 
             db.query(insert_feeding_action_multi_sql, (err, result, fields) => {
@@ -674,7 +676,7 @@ module.exports = {
                     type: "feeding_added",
                     user: req.user,
                     plant_id:req.body.plant_id,
-                    data: result.insertId
+                    data: prev_result.insertId
                   }
    
                   let str_payload = JSON.stringify(payload)
@@ -813,36 +815,201 @@ module.exports = {
   },
   deleteAction: (req, res) => {
     pubClient = req.app.locals.pubClient
+    console.log(parseInt(req.params.type))
+    let deleteAction_sql ;
 
-    deleteAction_sql = ` DELETE FROM plant_actions WHERE plant_actions.plant_action_id = ? AND plant_actions.user_id = ?`
+    switch (parseInt(req.params.type)) {
+      case 13:
 
-    db.query(deleteAction_sql, [req.params.plant_action_id, req.user.user_id], (err, result, fields) => {
-      if (err) {
-        console.log(err)
-      } else {
+        deleteAction_sql = ` DELETE FROM plant_actions WHERE plant_actions.plant_action_id = ? AND plant_actions.user_id = ?`
 
-        let payload = {
-          type: "action_deleted",
-          plant_action_id: req.params.plant_action_id,
-          plant_id: req.params.plant_id,
-          data: result.affectedRows
+        db.query(deleteAction_sql, [req.body.plant_action_id, req.user.user_id], (err, result, fields) => {
+          if (err) {
+            console.log(err)
+          } else {
+    
+            let payload = {
+              type: "action_deleted",
+              plant_action_id: req.params.plant_action_id,
+              plant_id: req.params.plant_id,
+              plant_note_id:req.body.plant_note_id
+            }
+    
+            let payload2 = {
+              type: "action_taken",
+              plant_action_id: req.params.plant_action_id,
+              plant_id: req.params.plant_id,
+              data: result.affectedRows
+            }
+    
+            let str_payload = JSON.stringify(payload)
+            let str_payload2 = JSON.stringify(payload2)
+    
+            pubClient.publish(process.env.CHANNEL, str_payload)
+            pubClient.publish(process.env.CHANNEL, str_payload2)
+    
+            res.send(result)
+          }
+        })
+
+        break;
+    
+      case 1:
+
+        deleteAction_sql = ` DELETE FROM plant_actions WHERE plant_actions.plant_action_id = ? AND plant_actions.user_id = ?`
+
+        db.query(deleteAction_sql, [req.body.plant_action_id, req.user.user_id], (err, result, fields) => {
+          if (err) {
+            console.log(err)
+          } else {
+    
+            let payload = {
+              type: "action_deleted",
+              plant_action_id: req.params.plant_action_id,
+              plant_id: req.params.plant_id,
+              plant_watering_id:req.body.plant_watering_id
+            }
+    
+            let payload2 = {
+              type: "action_taken",
+              plant_action_id: req.params.plant_action_id,
+              plant_id: req.params.plant_id,
+              data: result.affectedRows
+            }
+    
+            let str_payload = JSON.stringify(payload)
+            let str_payload2 = JSON.stringify(payload2)
+    
+            pubClient.publish(process.env.CHANNEL, str_payload)
+            pubClient.publish(process.env.CHANNEL, str_payload2)
+    
+            res.send(result)
+          }
+        })
+
+        break;
+      
+      case 2:
+
+        let length_check_sql = `SELECT COUNT(*) AS total FROM plant_feeding WHERE plant_feeding.plant_action_id = ? AND plant_feeding.user_id = ?`
+
+        db.query(length_check_sql, [req.body.plant_action_id, req.user.user_id], (err, result, fields) => {
+          if (err) {
+            console.log(err)
+          } else {
+            console.log("COUNT",result[0].total)
+            if(result[0].total < 2){
+
+              deleteAction_sql = ` DELETE FROM plant_actions WHERE plant_actions.plant_action_id = ? AND plant_actions.user_id = ?`
+
+              db.query(deleteAction_sql, [req.body.plant_action_id, req.user.user_id], (err, result, fields) => {
+                if (err) {
+                  console.log(err)
+                } else {
+          
+                  let payload = {
+                    type: "action_deleted",
+                    plant_action_id: req.params.plant_action_id,
+                    plant_id: req.params.plant_id,
+                    plant_feeding_id:req.body.plant_feeding_id
+                  }
+          
+                  let payload2 = {
+                    type: "action_taken",
+                    plant_action_id: req.params.plant_action_id,
+                    plant_id: req.params.plant_id,
+                    data: result.affectedRows
+                  }
+          
+                  let str_payload = JSON.stringify(payload)
+                  let str_payload2 = JSON.stringify(payload2)
+          
+                  pubClient.publish(process.env.CHANNEL, str_payload)
+                  pubClient.publish(process.env.CHANNEL, str_payload2)
+          
+                  res.send(result)
+                }
+              })
+              
+            }else{
+
+              deleteAction_sql = ` DELETE FROM plant_feeding WHERE plant_feeding.plant_feeding_id = ? AND plant_feeding.user_id = ?`
+
+              db.query(deleteAction_sql, [req.body.plant_feeding_id, req.user.user_id], (err, result, fields) => {
+                if (err) {
+                  console.log(err)
+                } else {
+          
+                  let payload = {
+                    type: "action_deleted",
+                    plant_action_id: req.params.plant_action_id,
+                    plant_id: req.params.plant_id,
+                    plant_feeding_id:req.body.plant_feeding_id
+                  }
+          
+                  let payload2 = {
+                    type: "action_taken",
+                    plant_action_id: req.params.plant_action_id,
+                    plant_id: req.params.plant_id,
+                    data: result.affectedRows
+                  }
+          
+                  let str_payload = JSON.stringify(payload)
+                  let str_payload2 = JSON.stringify(payload2)
+          
+                  pubClient.publish(process.env.CHANNEL, str_payload)
+                  pubClient.publish(process.env.CHANNEL, str_payload2)
+          
+                  res.send(result)
+                }
+              })
+            }
+          }
         }
+        )
 
-        let payload2 = {
-          type: "action_taken",
-          plant_action_id: req.params.plant_action_id,
-          plant_id: req.params.plant_id,
-          data: result.affectedRows
-        }
+       
 
-        let str_payload = JSON.stringify(payload)
-        let str_payload2 = JSON.stringify(payload2)
+        break;
 
-        pubClient.publish(process.env.CHANNEL, str_payload)
-        pubClient.publish(process.env.CHANNEL, str_payload2)
+      case 4:
 
-        res.send(result)
-      }
-    })
+        deleteAction_sql = ` DELETE FROM plant_actions WHERE plant_actions.plant_action_id = ? AND plant_actions.user_id = ?`
+
+        db.query(deleteAction_sql, [req.body.plant_action_id, req.user.user_id], (err, result, fields) => {
+          if (err) {
+            console.log(err)
+          } else {
+    
+            let payload = {
+              type: "action_deleted",
+              plant_action_id: req.params.plant_action_id,
+              plant_id: req.params.plant_id,
+              plant_action_id:req.body.plant_action_id
+            }
+    
+            let payload2 = {
+              type: "action_taken",
+              plant_action_id: req.params.plant_action_id,
+              plant_id: req.params.plant_id,
+              data: result.affectedRows
+            }
+    
+            let str_payload = JSON.stringify(payload)
+            let str_payload2 = JSON.stringify(payload2)
+    
+            pubClient.publish(process.env.CHANNEL, str_payload)
+            pubClient.publish(process.env.CHANNEL, str_payload2)
+    
+            res.send(result)
+          }
+      })
+      break;
+
+      default:
+      break;
+    }
+
+
   }
 }

@@ -31,7 +31,9 @@ router.post('/:plant_id/delete_action/:type', authenticateToken, PlantActionCont
 
 // Plant Information
 router.get('/public', PlantController.getPublic);
+router.get('/public/search', PlantController.searchPublic);
 router.get('/public_signed_in', authenticateToken, PlantController.getPublicSignedIn);
+router.get('/public_signed_in/search', authenticateToken, PlantController.searchPublicSignedIn);
 router.post('/:plant_id', authenticateToken, PlantController.get_detailed_plant_info);
 router.post('/public/:plant_id', PlantController.get_detailed_plant_info_public);
 

@@ -7,6 +7,7 @@ const plants = require("./plants")
 const environments = require("./environments")
 const irrigation_types = require("./irrigation_types")
 const nutrients = require("./nutrients")
+const training_techniques = require("./training_techniques")
 const growers = require("./growers")
 const measurement_units = require("./measurement_units")
 const notes = require("./notes")
@@ -26,6 +27,7 @@ router.use("/plants", plants);
 router.use("/environments", environments);
 router.use("/irrigation_types", irrigation_types);
 router.use("/nutrients", nutrients);
+router.use("/training_techniques", training_techniques);
 router.use("/growers", growers);
 router.use("/notes", notes);
 router.use("/user", notifications);
